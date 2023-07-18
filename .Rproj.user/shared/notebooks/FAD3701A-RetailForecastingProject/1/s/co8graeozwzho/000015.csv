@@ -1,0 +1,7 @@
+"0","fit_arima_ets <- myseries %>%"
+"0","  model("
+"0","    arima = ARIMA(box_cox(Turnover, lambda = 0.056) ~ 1 + pdq(2,0,2) + PDQ(2,1,2)),"
+"0","    ets = ETS(Turnover ~ error(""A"") + trend(""Ad"") + season(""M""))"
+"0","  )"
+"0",""
+"0",""

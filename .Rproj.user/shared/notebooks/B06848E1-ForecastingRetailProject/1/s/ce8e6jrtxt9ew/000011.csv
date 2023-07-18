@@ -1,0 +1,5 @@
+"0",""
+"0","glance(fitB) %>%"
+"0","  select(State, Industry, .model, AIC, AICc) %>%"
+"0","  kable() %>%"
+"0","  kable_classic_2(full_width = F, html_font = ""Cambria"")"

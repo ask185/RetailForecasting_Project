@@ -1,0 +1,6 @@
+"0","abs_data%>%
+  accuracy(fc_ets)
+"
+"2","Error in UseMethod(""accuracy"") : 
+  no applicable method for 'accuracy' applied to an object of class ""c('tbl_ts', 'tbl_df', 'tbl', 'data.frame')""
+"

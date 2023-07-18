@@ -1,0 +1,20 @@
+"0","fit_ets %>%
+  select(-ets_madm) %>% 
+  report()
+"
+"1","[1m[33mError[39m in [38;5;232m`select()`[39m:[22m
+[33m![39m Can't subset columns past the end.
+[31mx[39m Column `ets_madm` doesn't exist.
+Backtrace:
+[90m  1. [39mfit_ets %>% select(-ets_madm) %>% report()
+[90m  6. [39m[1mdplyr[22m:::select.data.frame(., -ets_madm)
+[90m  9. [39m[1mtidyselect[22m::eval_select(expr(c(...)), .data)
+[90m 10. [39mtidyselect:::eval_select_impl(...)
+[90m 19. [39mtidyselect:::vars_select_eval(...)
+     ...
+[90m 22. [39mtidyselect:::reduce_sels(node, data_mask, context_mask, init = init)
+[90m 23. [39mtidyselect:::walk_data_tree(new, data_mask, context_mask)
+[90m 24. [39mtidyselect:::as_indices_sel_impl(...)
+[90m 25. [39mtidyselect:::as_indices_impl(x, vars, call = call, strict = strict)
+[90m 26. [39mtidyselect:::chr_as_locations(x, vars, call = call)
+"

@@ -1,0 +1,6 @@
+"0","myseries_guerrero <- myseries %>%"
+"0","  features(Turnover, features = guerrero) %>%"
+"0","kableExtra::kbl(caption = ""Guerrero recommended lambda value"") %>%"
+"0","  kable_classic(full_width = F, html_font = ""Cambria"")"
+"0",""
+"0","myseries_guerrero"

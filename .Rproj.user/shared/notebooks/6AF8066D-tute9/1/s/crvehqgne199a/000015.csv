@@ -1,0 +1,5 @@
+"0",""
+"0","# this plot shows that the one I chose is close to being non-stationary"
+"0","# you can see the red dot on the boundary of the unit circle for MA; "
+"0","# this indicates that the model is close to being non-zero which is why "
+"0","# it is not considered by the model on its own."

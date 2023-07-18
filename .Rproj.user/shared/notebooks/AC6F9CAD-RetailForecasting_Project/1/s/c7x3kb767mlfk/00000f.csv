@@ -1,0 +1,7 @@
+"0","fc_ets <-fit_arima_ets %>%"
+"0","  select(State, Industry, ets)%>%"
+"0","  forecast(h = ""4 years"") "
+"0",""
+"0","fc_ets%>%"
+"0","  autoplot(tail(myseries, 12*10), level = 80) +"
+"0","  labs(title = ""ARIMA 4 years forecasts"", y = ""Millions $"")"

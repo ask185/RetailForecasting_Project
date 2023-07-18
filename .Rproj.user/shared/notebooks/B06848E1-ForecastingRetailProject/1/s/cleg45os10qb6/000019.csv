@@ -1,0 +1,6 @@
+"0",""
+"0","glance(fit_arima) %>%"
+"0","  arrange(AICc) %>%"
+"0","  select(State, Industry, .model, AIC, AICc, BIC) %>%"
+"0","  kbl(caption = ""AIC scores from ARIMA models"") %>%"
+"0","  kable_classic_2(full_width = F, html_font = ""Cambria"")"

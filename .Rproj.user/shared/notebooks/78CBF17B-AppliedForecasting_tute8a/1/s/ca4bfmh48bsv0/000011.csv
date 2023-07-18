@@ -1,0 +1,6 @@
+"0","amazon_stock %>%"
+"0","  ACF(Close) %>%"
+"0","  autoplot()"
+"2","Warning:"
+"2"," Provided data has an irregular interval, results should be treated with caution. Computing ACF by observation.
+"

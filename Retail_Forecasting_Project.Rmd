@@ -1,0 +1,201 @@
+---
+title: "Retail Forecasting Project"
+author: "Aryan Sultan"
+date: '2022-05-4'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, eval = TRUE, message = T, warning = T)
+library(fpp3)
+library(tidyverse)
+library(fable)
+library(kableExtra)
+```
+
+```{r}
+# Use your student ID as the seed
+set.seed(31245307)
+myseries <- aus_retail %>%
+  # Remove discontinued series
+  filter(!(`Series ID` %in% c("A3349561R","A3349883F","A3349499L","A3349902A",
+                        "A3349588R","A3349763L","A3349372C","A3349450X",
+                        "A3349679W","A3349378T","A3349767W","A3349451A"))) %>%
+  # Select a series at random
+  filter(`Series ID` == sample(`Series ID`,1))
+```
+
+
+## Forecasting {.tabset}
+
+
+#### ETS model
+
+The retail data I am working with have multiplicative seasonality and additive trend. Additive trend means that the data have a linear trend. Multiplicative seasonality means that the seasonality observed in the given data is not constant or same across the series; it changes as the level of series increase. The errors are heteroskedastic which means that the variance of the errors is not constant across the series. Since I have multiplicative seasonality with additive trend and multiplicative errors, I will fit multiplicative models to the given series or more formally the **Holt-Winters multiplicative method with multiplicative errors**.
+
+```{r}
+myseries %>%
+  model(stl = STL(log(Turnover))) %>%
+  gg_tsresiduals()
+```
+
+
+In order to carry out analysis, I will first fit multiple ETS models to the given retail data and then use accuracy measures to determine which ones the best. Finally, I will let ETS() function to produce a model -- ETS() function chooses an appropriate model by default when the function is applied to the given series. I will then compare the model produced by the ETS function to the model I have chosen as best for this data. The performance of the models is assessed based on the following measures: $AIC_c$, MASE, and RMSE. These measures can be obtained by using the __accuracy()__ function and __glance()__ functions. 
+
+I will fit the following models to the data for analysis:
+
+- ETS (M,Ad,M) model: ETS model with multiplicative errors, damped additive trend, and multiplicative seasonality
+- ETS (M,A,M) model: ETS model with additive trend and multiplicative seasonality
+- ETS (A,Ad,M) model: ETS model with additive errors, damped-additive trend and multiplicative seasonality.
+
+The reason I am choosing to  ETS model with the damped additive trend is because as discussed in [reference the book], dampening trend tends prevents from over-forecasting the series.
+
+Before I fit multiple ETS models to the data and check them for accuracy, I will split series into training, which I will use to make forecasts for the next four years until 2020, and a test set.
+
+
+```{r}
+# splitting series into training and test sets
+
+
+myseries_training <-myseries %>% filter(year(Month) <= 2016)
+
+myseries_test <- myseries %>% filter(year(Month) >=2016)
+
+
+
+# fitting the model to three models I have chosen
+
+fit_ets <- myseries_training %>%
+  model(
+    ets_madm = ETS(Turnover ~ error("M") + trend("Ad") + season("M")),
+    ets_mam = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    ets_aadm = ETS(Turnover ~ error("A") + trend("Ad") + season("M")))
+
+```
+
+In order to better understand these models and figure out which one of these models is more suitable for our series, lets examine these models using accuracy measures such as RMSE, MSE, and MASE.
+
+```{r}
+library(kableExtra)
+accuracy_fit <- accuracy(fit_ets)
+
+
+accuracy_fit %>%
+  select(State, Industry, .model, .type, RMSE, MASE, MAE, RMSSE,	ACF1) %>%
+  kbl(caption = "Accuracy measures") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+```{r}
+
+glance(fit_ets) %>%
+  select(State, Industry, .model, AIC, AICc, BIC) %>%
+  kbl(caption = "AICc") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+
+
+Root Mean Square Error (RMSE) shows that ETS model with additive errors, damped-additive trend and multiplicative seasonality outperforms other two models, since it has the lowest RMSE score among the three models, but it has the lowest Mean Absolute Error (MASE).
+However, looking at the Akaike information criterion-corrected (AICc) score, it turns out that ETS model with **multiplicative errors, damped-additive trend and multiplicative seasonality** is better among all three models, and AICc is highest for ETS model with additive errors, damped-additive trend and multiplicative seasonality. 
+
+*???? why is RMSE lower for the aadm method not madm method and MASE higher for mam method and not the madm ?????*
+
+AIC is used to compare different possible models and determine which one is the best fit for the series. AIC uses a model’s maximum likelihood estimation (log-likelihood) as a measure of fit. Maximum likelihood is a measure of how likely it is to see the observed data, given a model. The model with the maximum likelihood is the one that “fits” the series the best. AIC is low for models with high likelihoods -- this means the selected model fits the series better -- but adds a penalty term for models with higher parameter complexity, since more parameters means a model is more likely to overfit to the training data. *explain accuracy and AIC difference*The desired result is to find the lowest possible AIC, which indicates the best balance of model fit with generalizability.^[https://towardsdatascience.com/introduction-to-aic-akaike-information-criterion-9c9ba1c96ced] ^[https://otexts.com/fpp3/ets-estimation.html]
+
+
+Hence I choose the ETS model with **multiplicative errors, damped-additive trend and multiplicative seasonality** using AICc score as the selection criterion. 
+
+Lets now apply the ETS function to the series and see what model does ETS produce.
+
+
+```{r}
+(scipen=999)
+
+fit_ets_auto <- myseries_training %>%
+  model(
+    ets_auto= ETS(Turnover),
+    ets_madm = ETS(Turnover ~ error("M") + trend("Ad") + season("M")),
+    ets_mam = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    ets_aadm = ETS(Turnover ~ error("A") + trend("Ad") + season("M")))
+
+fit_ets_auto %>%
+  kbl(caption = "AICc") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+  
+
+fit_ets_auto %>%
+  glance() %>%
+  select(State, Industry, .model, AIC, AICc, BIC) %>%
+  kbl(caption = "AICc") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+
+ETS function produces ETS(M,Ad,M) as the best fit for the series. As discussed above this model has the lowest AICc score among all other shortlisted models. Hence ETS(M,Ad,M) is the best model fit for this series. WE can further look at the parameter estimates for this model:
+
+
+
+```{r}
+fit_ets_auto %>%
+  tidy(scipen=999) %>%
+  select(.model, term, estimate) %>%
+  filter(.model %in% "ets_auto") %>%
+  kbl(caption = "Parameter estimates") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+Having discussed the specified models and the model produced by the ETS, lets produce forecasts with these models for the next four years i.e. 2016-2020.
+
+
+```{r}
+# producing forecasts with the above specified models 
+
+forecast_ets <- fit_ets_auto %>%
+  # select(ets_auto) %>%
+  forecast(h = "4 years") 
+
+forecast_ets %>%
+  autoplot(tail(myseries_training, 12*10), level = NULL) +
+  labs(title = "Forecasts for the next 4 year", y = "$ (millions)") +
+  theme_minimal()
+
+
+```
+We can observe from the plot that `ets_auto` ETS multiplicative errors, damped-additive trend and multiplicative seasonality model is closer to the `ets_aadm` method. *???why is this? As in why is it not closer to the mam method????*
+
+We can further look at the fitted values from `ets_auto` -- ETS(M,Ad,M) method -- against the actual values.
+
+```{r}
+ets_auto_fit <- fit_ets_auto %>%
+  select(ets_auto)
+
+myseries_training %>%
+  autoplot(Turnover) +
+  autolayer(fitted(ets_auto_fit), colour = "red") +
+  labs(title = "Fitted against the actual values")+
+  theme_minimal() 
+```
+It does pretty well on the training data. It can be observed from the plot that the red line (forecast from the ets_auto) is almost the same as the actual training data.
+
+Now lets apply this data to the test set. Applying this model to the test allows us to see how well does the model perform on the test set -- the part of the series it has not seen. The main reason we do this is to check if the model overfits the training data. If it does then clearly the model is not enough to generate prediction on set on observation it has not seen yet, although we know from AICc score that the ETS(M,Ad,M) model `ets_auto` model will be good for prediction than other models specified earlier. 
+
+
+```{r}
+
+
+forecast_ets %>%
+  select(ets_auto) %>%
+  autoplot(tail(myseries_test, 12*4)) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA model", y ="millions $")
+
+accuracy(forecast_ets, myseries) %>%
+   kbl(caption = "Accuracy measures") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+On the test set, ETS(M,Ad,M) method does much better than other models. Remember that this model was produced by the ETS function itself. Hence it is safe to say now I have the best ETS model. In the next I analyse the ARIMA models and then compare the ETS model with the best ARIMA model to see which one is more suitable.
+
+
+
+#### ARIMA model

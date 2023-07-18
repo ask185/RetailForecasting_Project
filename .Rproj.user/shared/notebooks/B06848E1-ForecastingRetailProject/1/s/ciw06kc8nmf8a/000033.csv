@@ -1,0 +1,6 @@
+"0",""
+"0","# myseries_training %>%"
+"0","#   features(difference(box_cox(Turnover, lambda = 0.056), lag=12), list(unitroot_nsdiffs, unitroot_ndiffs)) %>%"
+"0","#   kable(caption = ""Unit roots ndiff and nsdiff tests"")%>%"
+"0","#   kable_classic(full_width = F, html_font = ""Cambria"")"
+"0",""

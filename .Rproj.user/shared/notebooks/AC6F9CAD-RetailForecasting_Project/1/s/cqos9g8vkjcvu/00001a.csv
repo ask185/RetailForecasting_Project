@@ -1,0 +1,6 @@
+"0",""
+"0","myseries %>%"
+"0","  autoplot(box_cox(Turnover, lambda = 0.056), colour = ""grey"") +"
+"0","  autolayer(components(dcmp), trend, colour = ""Blue"") +"
+"0","  labs(y = ""Million $"", title = ""Total Turnover in the retail indistry"")+"
+"0","  theme_bw()"

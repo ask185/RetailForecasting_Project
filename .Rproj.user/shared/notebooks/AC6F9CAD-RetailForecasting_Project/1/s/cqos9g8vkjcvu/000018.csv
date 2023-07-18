@@ -1,0 +1,8 @@
+"0",""
+"0","p1 <-myseries %>%"
+"0","  model(STL(log(Turnover) ~ season(window = 35) + trend(window = 17), robust = TRUE)) %>%"
+"0","  components() %>%"
+"0","  autoplot() +"
+"0","  labs(title = ""STL decomposition: retail data"")"
+"0",""
+"0","p1"

@@ -1,0 +1,8 @@
+"0","myseries_log <- myseries %>%"
+"0","  autoplot(log(Turnover)) +"
+"0","  labs(title = ""Log-transformed Turnover"") +"
+"0","  xlab(""Months"") +"
+"0","  ylab(""Turnover"") + "
+"0","  theme_minimal()"
+"0",""
+"0","myseries_log"

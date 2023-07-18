@@ -1,0 +1,3 @@
+"0","tas_accomodation %>%"
+"0","  ACF(difference(log(Takings), lag = 4)) %>%"
+"0","  autoplot()"

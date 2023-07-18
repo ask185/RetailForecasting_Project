@@ -1,0 +1,6 @@
+"0","knitr::opts_chunk$set(echo = F, eval = TRUE, message = T, warning = T)"
+"0","library(fpp3)"
+"0","library(tidyverse)"
+"0","library(fable)"
+"0","library(kableExtra)"
+"0","options(scipen=999)"

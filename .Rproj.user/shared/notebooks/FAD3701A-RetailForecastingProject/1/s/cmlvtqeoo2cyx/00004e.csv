@@ -1,0 +1,5 @@
+"0","fit_arima_ets %>%"
+"0","  select(ets) %>%"
+"0","  augment() %>%"
+"0","  features(.innov, ljung_box, lag = 24, dof = 11) %>%"
+"0","  kable(caption = ""ljung box test for ets model"") "

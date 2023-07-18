@@ -1,0 +1,7 @@
+"0","# turns out the ARIMA 212 model is performing better than the"
+"0","# automatically selected one."
+"0",""
+"0","# why is the automatic model not as good?"
+"0",""
+"0","fit %>%"
+"0","  gg_arma()"

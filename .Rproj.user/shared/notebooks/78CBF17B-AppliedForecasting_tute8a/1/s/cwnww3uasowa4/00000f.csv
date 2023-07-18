@@ -1,0 +1,5 @@
+"0",""
+"0","souvenirs %>%"
+"0","  model(STL(Sales)) %>%"
+"0","  components() %>%"
+"0","  autoplot()"

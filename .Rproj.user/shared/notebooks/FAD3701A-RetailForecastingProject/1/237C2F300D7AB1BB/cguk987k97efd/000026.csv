@@ -1,0 +1,12 @@
+"0","ets_mam <- ets_forecasts %>%"
+"0","  filter(.model %in% ""ets_mam"")"
+"0",""
+"0",""
+"0","accuracy(ets_mam, myseries) %>%"
+"0","  select(.model:MASE) %>%"
+"0","   kbl(caption = ""Accuracy measures for ETS(M,A,M)"") %>%"
+"0","  kable_classic(full_width = F, html_font = ""Cambria"")"
+"2","Warning:"
+"2"," The future dataset is incomplete, incomplete out-of-sample data will be treated as missing. 
+24 observations are missing between 2019 Jan and 2020 Dec
+"

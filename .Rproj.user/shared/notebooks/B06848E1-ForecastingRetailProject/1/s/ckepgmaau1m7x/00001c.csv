@@ -1,0 +1,4 @@
+"0","fit_arima %>%"
+"0","  select(arima201211) %>%"
+"0","  gg_tsresiduals()"
+"0",""

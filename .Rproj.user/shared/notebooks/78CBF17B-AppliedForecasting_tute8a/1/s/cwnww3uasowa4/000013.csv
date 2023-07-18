@@ -1,0 +1,12 @@
+"0",""
+"0","# seasonal difference"
+"0",""
+"0","souvenirs %>%"
+"0","  gg_tsdisplay(difference(log(Sales), lag = 12),"
+"0","plot_type=""partial"")"
+"2","Warning:"
+"2"," Removed 12 row(s) containing missing values (geom_path).
+"
+"2","Warning:"
+"2"," Removed 12 rows containing missing values (geom_point).
+"

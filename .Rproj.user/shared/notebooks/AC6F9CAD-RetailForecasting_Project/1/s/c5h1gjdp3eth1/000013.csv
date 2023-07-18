@@ -1,0 +1,7 @@
+"0","ACF_myseries <- myseries %>%"
+"0","  ACF(Turnover) %>%"
+"0","  head(12) %>%"
+"0","  kbl(caption = ""Autocorrelations between first 12 lags"") %>%"
+"0","  kable_classic_2(full_width = F, html_font = ""Cambria"")"
+"0",""
+"0","ACF_myseries"

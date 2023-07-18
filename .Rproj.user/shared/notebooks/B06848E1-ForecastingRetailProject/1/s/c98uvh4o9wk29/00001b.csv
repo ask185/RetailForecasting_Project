@@ -1,0 +1,6 @@
+"0","myseries %>%"
+"0","  autoplot(box_cox(Turnover, lambda = 0.056)) +"
+"0","  labs(title = ""Box-cox transformed turnover"") +"
+"0","  xlab(""Month"")+"
+"0","  ylab(""Turnover: millions $"") +"
+"0","  theme_bw()"

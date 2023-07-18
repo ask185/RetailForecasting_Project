@@ -1,0 +1,5 @@
+"0","  "
+"0"," fit_ets %>%"
+"0","  select(State, Industry, ets_mam)%>%"
+"0","  gg_tsresiduals()+"
+"0","   labs(title=""ETS(M,A,M"")"

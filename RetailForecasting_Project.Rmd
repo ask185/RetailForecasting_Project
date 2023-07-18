@@ -1,0 +1,932 @@
+---
+title: "Retail Forecasting Project"
+author: "Aryan Sultan"
+date: "2022-05-04"
+output:
+  pdf_document: default
+  html_document:
+    theme: bootstrap
+---
+
+
+## Forecasting for Monthly turnover of Pharmaceutical, cosmetic & toiletry goods  {.tabset .tabset-fade .tabset-pills}
+
+
+### Statistical features of the Original data
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(fpp3)
+library(tidyverse)
+library(fable)
+library(kableExtra)
+```
+
+```{r loadingData}
+# Use your student ID as the seed
+set.seed(31245307)
+myseries <- aus_retail %>%
+  # Remove discontinued series
+  filter(!(`Series ID` %in% c("A3349561R","A3349883F","A3349499L","A3349902A",
+                        "A3349588R","A3349763L","A3349372C","A3349450X",
+                        "A3349679W","A3349378T","A3349767W","A3349451A"))) %>%
+  # Select a series at random
+  filter(`Series ID` == sample(`Series ID`,1))
+
+abs_data <- readabs::read_abs(series_id="A3349401C")
+
+myseries %>%
+  head(10) %>%
+  kable(caption = "First ten rows of Monthly turnover of Pharmaceutical, cosmetic & toiletry goods data") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria") 
+
+```
+
+
+The data that I am working with is based on the Pharmaceutical, cosmetic and toiletry goods retailing industry in New South Wales. This time series data have 441 observations and 5 variables, and the **key** variables are: State, and Industry. Lets visualize the data using autoplot() function.
+
+#### Visualising the data
+
+```{r plot1, fig.cap="Monthly turnover of the Pharmaceutical, cosmetic & toiletry goods"}
+myseries %>%
+  autoplot(Turnover) +
+  labs(title = "Monthly turnover of Pharmaceutical, cosmetic & toiletry goods",
+  x="Months", y="Monthly turnover in AUD") +
+  scale_y_continuous(labels = scales::dollar) +
+  theme_classic()
+```
+
+The key features of the data set observed from the plot above:
+
+ - The data has an upward trend or a positive global trend and the shape of the trend can be described as linear i.e. as the turnover increases, the rate of change increases at the same proportion;
+
+ - There are seasonal effects in the data because the peaks and troughs are somewhat similar in shape and size and have a recurring pattern over the course of the data;
+
+ - There also appear to be cyclic patterns on top of the trend; there is a fall somewhere between mid to late 90s, and then again somewhere close to 2007-2008, perhaps due to global recession and then yet again around the years between 2015-2018.
+
+Fluctuations (variance) in the plot are much smaller at the beginning but become bigger as the level of series increase. The size of fluctuations across the series is inconsistent. We could use different techniques to standardize the variance; these techniques have been discussed later in this report.
+
+
+Lets look at the annual turnover of Pharmaceutical, cosmetic & toiletry goods of the retailing industry. 
+
+
+```{r}
+myseries %>%
+  index_by(Annual = year(Month)) %>%
+  summarise(Turnover = sum(Turnover)) %>%
+  autoplot(Turnover) +
+  labs(title = "Annual Turnover for the retailing industry") +
+  theme_gray()
+```
+
+
+
+From the plot above it can be observed that the overall trend is moving in an upward direction -- a positive global trend, however, there are unpredictable up and down movements which indicate the existence of cyclic patterns in the data.
+
+
+#### Seasonality
+
+As discussed earlier, the series have seasonal patterns.
+
+Let's examine the seasonality in the data.
+
+(Chapter:2)^[https://otexts.com/fpp3/tspatterns.html]
+
+ - Seasonal patterns always have a ***constant length***, and emerge due to the seasonal factors such as the quarter of the year, the month or day of the week. 
+ - The timing of peaks and troughs is predictable with seasonal data because of the constant length of time between the peaks and troughs; in the long term, however, the seasonality can change overtime, which is the case with the data set observed above, but generally the timing of the peaks and troughs is fairly predictable.
+
+One of visualization techniques to examine seasonality in the data set is `gg_season` which allows us to see data be plotted against the seasons in separate years.^[https://pkg.robjhyndman.com/forecast/reference/seasonplot.html]
+
+ 
+
+```{r}
+
+myseries %>%
+  gg_season(Turnover) +
+  labs(title = "Seasonal plot of turnover",
+  x= "Months", y= "Turnover in AUD") +
+  scale_y_continuous(labels = scales::dollar)
+```
+
+
+
+##### Explanation:
+
+The seasonal plot shows that the maximum turnover (peak) for the data occurs in December and the minimum turnover (trough) for seasonality occurs in February. One can also observe that over time, the seasonality for this data set changes. We can split this data set in to four periods: the 80s, 90s, 2000s and post 2011 time period.
+
+During the 80s the turnover for the Pharmaceutical, cosmetic and toiletry goods retailing industry remains somewhat constant; there is a peak in December but there is not much fluctuation in seasonality across the data for the 80s.
+
+In the 90s the seasonal patterns begin to change. One can observe that turnover peaks begin to occur in March during the 90s, even though there is no spike in the same month during the 80s. In fact spikes in August, September and October are observable as well. The trough in February also begins to occur in the 90s. And, even though these fluctuations are not stable across 90s, for example, there are peaks in Augusts and Septembers, but also visible falls/troughs during the same months in the same decade, and the green lines go up and down in an unstable fashion in April and May. The size and shape of the fluctuations -- the seasonal patterns -- are certainly changing over the time, and I may call these variations in the seasonal patterns in 90s as the transitional period wherein the seasonal patterns drift away from the 80s into new direction. 
+
+In 2000s the patterns change even further, while some of the earlier patterns become more pronounced, some new patterns also emerge. In the late 2000s (purple line) the patterns go through further transitions, for example there are more pronounced spikes in the months of July and October, which were not observed early 2000s (blue lines) and the 90s. In general across 2000s, one can observe troughs in the months of April, June, September and a global minimum in February, and spikes in the months of March, May and a global maximum in December.
+
+In 2010s, the patterns have become stable. There is global minimum for data in February and a global maximum for our data in December. Local peaks or maximum occur in the months of March, May and August. The local minimum (local troughs) occur in April, June, July, September and November. There is still some variation in patterns though, for example at the very top of the plot there is this one pink line that does not move in downward direction, in line with the previous years pattern, instead it moves upwards in steady fashion from October until December when it peaks.
+
+
+
+We further examine seasonality in the data using `gg_subseries`.^[https://pkg.robjhyndman.com/forecast/reference/ggmonthplot.html]
+(Chapter:2)^[https://otexts.com/fpp3/tspatterns.html]
+
+```{r plot2}
+myseries %>%
+  gg_subseries(Turnover)
+
+
+```
+One can observe that global minimum (trough) for this data set occurs in February and a global maximum (peak) in December. Furthermore, there are peaks (local maximum) in March, May, July, and August and the local troughs (minimum) occur in April, June, and September. Some of the seasonal features not very clearly observed from `gg_season` plot is across four decades, the variations between September and November are roughly constant, although there is definitely a slight rise/peak in November. 
+
+The next technique used to examine the data is Auto-correlation Function (ACF) using `ACF()` function in R.
+(chapter: 2)^[https://otexts.com/fpp3/acf.html]
+
+```{r ACF}
+myseries %>%
+  ACF(Turnover) %>%
+  head(12) %>%
+  kbl(caption = "Autocorrelations between first 12 lags") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+
+```
+
+```{r ACFplot}
+
+myseries %>%
+  ACF(Turnover) %>%
+  autoplot() +
+  labs(title = "ACF plot for turnover") +
+  theme_bw()
+
+```
+The three key features of the ACF plots are:
+
+- This data set exhibit **trend** because the auto-correlations for small lags are large and positive and there is a slow decay in the lags:
+
+- The data also have seasonality, the auto correlations are larger at the seasonal lags: Since this is the monthly data, the lags 1, 12, 24 are linearly correlated;  
+
+- Since the data plotted with ACF have the trend and seasonal effects, the combination of these effects can be observed in the plot.
+
+#### Should we transform data to standardize variance?
+
+Chapter:3^[https://otexts.com/fpp3/transformations.html]
+
+Understanding the variation in the data is key to developing more robust statistical models for forecasting the future values. 
+ 
+ As pointed out at the beginning, the size of fluctuations vary across the level of series i.e. at lower level of series the fluctuations are smaller but as data increases, the fluctuations become bigger. The goal of the transformation is to make this variance constant across the series. Furthermore it is important to note Time always remains the same that is time remains un-transformed.
+
+Lets try mathematical transformation and see what the plot looks like.
+
+**Mathematical transformations**
+
+Let's try the log-transformation for `myseries` data and observe what happens to the shape and size of fluctuations in the data:
+
+```{r}
+myseries_log <- myseries %>%
+  autoplot(log(Turnover)) +
+  labs(title = "Log-transformed Turnover") +
+  xlab("Months") +
+  ylab("Turnover") + 
+  theme_minimal()
+
+myseries_log
+```
+
+The log-transformed fluctuations now seem quiet similar in shape and size. The variation has been greatly reduced here. However, box-cox transformation which allows for different values (between 0 and 1) for $\lambda$ to be used in transformation can be tried out. Before using the box-cox transformation, let's find out through the `guerrero` method the recommended $\lambda$ value.
+
+Here using the `guerreo` functions the Guerrero recommended $\lambda$ is generated:
+
+```{r guerrero}
+myseries_guerrero <- myseries %>%
+  features(Turnover, features = guerrero) %>%
+kableExtra::kbl(caption = "Guerrero recommended lambda value") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+myseries_guerrero
+```
+Since the value of $\lambda$ is close to 0, it is appropriate to just use the `log()` to transform the data rather then using the value recommended by the `guerrero` method. 
+
+Transform would be particularly useful when performing Forecasts using the ARIMA models.
+
+
+#### Season-Trend decompostion using LOESS (STL Decomposition)
+
+Chapter:3^[https://otexts.com/fpp3/stl.html]
+
+Decomposition is primarily used for time series analysis, and as an analysis tool it can be used to inform forecasting models on problems in data. The most common reason for time series decomposition is to seasonally adjust the data.
+
+
+```{r}
+
+dcmp<- myseries %>%
+  model(STL(box_cox(Turnover, lambda = 0.056)))
+
+dcmp %>% components() %>% autoplot()
+
+p1 <-myseries %>%
+  model(STL(log(Turnover) ~ season(window = 35) + trend(window = 17), robust = TRUE)) %>%
+  components() %>%
+  autoplot() +
+  labs(title = "STL decomposition: retail data")
+
+p1
+
+myseries %>%
+  autoplot(box_cox(Turnover, lambda = 0.056), colour = "grey") +
+  autolayer(components(dcmp), trend, colour = "Blue") +
+  labs(y = "Million $", title = "Total Turnover in the retail indistry")+
+  theme_bw()
+
+
+```
+
+
+The STL model is fit to the data set and saved in the `dcmp` variable. The output is a “dable” or decomposition table. The header to the table shows that the Turnover series has been decomposed additively: box_cox(Turnover) = trend + season-year + remainder. This is because when we box-cox transformed our data, the STL decomposition model decomposed data additively. 
+
+On the top panel is log transformed data (turnover), and the three components are shown separately in the bottom three panels and when combined additively these three components will produce the box-cox transformed data. It can be observed that the trend appears to be moving upwards in a linear fashion while the seasonality appears to varied shape and size. To fix this I have made more specification into the model function.
+
+In the model() function, I have decided to set the trend window to 15, as the window increases, it averages over more number from the data and produces a smoother line. There are slight highs and lows, but in my opinion, it captures the overall data quiet well. The trend appears to be linear from the above decomposition plot. 
+
+In the last plot, we can see the total turnover in the given industry. This again shows that the trend looks linear. 
+
+
+### Forecasting with ETS model {.tabset}
+
+
+#### Splitting data and fitting models
+
+Chapter:8^[https://otexts.com/fpp3/expsmooth.html]
+
+The retail data I am working with have multiplicative seasonality and additive trend. Additive trend means that the data have a linear trend -- discussed earlier. Multiplicative seasonality means that the seasonality observed in the given data is not constant or same across the series; it changes as the level of series increase. Since I have multiplicative seasonality with additive trend, I will fit multiplicative models to the given series or more formally the **Holt-Winters multiplicative method with multiplicative errors**.
+
+In order to carry out analysis, I will fit multiple ETS models to the given retail data and then use accuracy measures to determine which ones the best. I will also include model produced by the ETS() function -- ETS() function chooses an appropriate model by default when the function is applied to the given series. I will then compare the models based on the accuracy measures: $AIC_c$, MASE, and RMSE. 
+
+These measures can be obtained by using the __accuracy()__ function and __glance()__ functions. 
+
+I will fit the following models to the data for analysis:
+
+- ETS (M,Ad,M) model: ETS model with multiplicative errors, damped additive trend, and multiplicative seasonality
+- ETS (M,A,M) model: ETS model with additive trend and multiplicative seasonality
+- ETS (A,Ad,M) model: ETS model with additive errors, damped-additive trend and multiplicative seasonality.
+
+The reason I am choosing to  ETS model with the damped additive trend is because dampening trend tends to prevent Model from over-forecasting the series.
+
+Before I fit multiple ETS models to the data and check them for accuracy, I will split series into training set, which I will use to make forecasts for the next four years until 2020, and a test set.
+
+
+```{r}
+# splitting series into training and test sets
+
+
+myseries_training <-myseries %>% filter(year(Month) <= 2016)
+
+myseries_test <- myseries %>% filter(year(Month) >=2016)
+
+
+
+# fitting the model to three models I have chosen
+
+fit_ets <- myseries_training %>%
+  model(
+    ets_auto= ETS(Turnover),
+    ets_madm = ETS(Turnover ~ error("M") + trend("Ad") + season("M")),
+    ets_mam = ETS(Turnover ~ error("M") + trend("A") + season("M")),
+    ets_aadm = ETS(Turnover ~ error("A") + trend("Ad") + season("M")))
+
+fit_ets %>%
+  kbl(caption = "ARIMA models") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+
+ETS function produces ETS(M,Ad,M) as the best fit for the series. In order to better understand these models and figure out which one of these models is more suitable for our series, lets examine these models using accuracy measures such as RMSE, MSE, and MASE.
+
+```{r}
+library(kableExtra)
+accuracy_fit <- fit_ets %>%
+  select(-ets_madm)%>%
+  accuracy()
+
+
+accuracy_fit %>%
+  select(State, Industry, .model, .type, RMSE, MASE, MAE, RMSSE,	ACF1) %>%
+  kbl(caption = "Accuracy measures") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+```{r}
+fit_ets<- fit_ets %>%
+  select(-ets_madm)
+
+  glance(fit_ets) %>%
+  select(State, Industry, .model, AIC, AICc, BIC) %>%
+  kbl(caption = "AICc") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+
+
+Root Mean Square Error (RMSE) shows that ETS model with **additive errors, damped-additive trend and multiplicative seasonality** outperforms other two models: it has the lowest RMSE and the lowest Mean Absolute Error (MASE) score among all of the models specified.
+
+However, looking at the Akaike information criterion-corrected (AIC$_c$) score, it turns out that ETS model with **multiplicative errors, damped-additive trend and multiplicative seasonality** is better among all three models. 
+
+I would prefer to look at the AIC scores. This is because AIC is used to compare different possible models and determine which one is the best fit for the series. AIC uses a model’s maximum likelihood estimation (log-likelihood) as a measure of fit. Maximum likelihood is a measure of how likely it is to see the observed data, given a model. The model with the maximum likelihood is the one that “fits” the series the best. AIC is low for models with high likelihoods -- this means the selected model fits the series better -- but adds a penalty term for models with higher parameter complexity, since more parameters means a model is more likely to overfit to the training data. The desired result is to find the lowest possible AIC, which indicates the best balance of model fit with generalizability.^[https://towardsdatascience.com/introduction-to-aic-akaike-information-criterion-9c9ba1c96ced] ^[https://otexts.com/fpp3/ets-estimation.html]
+
+While I would prefer a model that has a minimum AIC to the model(s) that has better RMSE and MASE score, there is no silver bullet. I cannot state with certainty which is better based on just the AIC and RMSE/MASE score. Nevertheless, I will use these models to generate forecasts on training data and test their accuracy on the test set to determine which is one better among all three models.
+
+Lets also examine the ljung box test for these models:
+
+```{r}
+options(scipen = 999)
+
+fit_ets %>%
+  select(ets_auto)%>%
+  report() 
+
+
+fit_ets %>%
+  select(ets_auto)%>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 11) %>%
+  kable(caption = "Ljung box test for ets_M,Ad,M") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+fit_ets %>%
+  select(ets_mam)%>%
+  report() 
+
+fit_ets %>%
+  select(ets_aadm)%>%
+  report()
+
+fit_ets %>%
+  select(ets_mam)%>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 11) %>%
+  kable(caption = "Ljung box test for ets_M,A,M") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+fit_ets %>%
+  select(ets_aadm)%>%
+  augment()%>%
+  features(.innov, ljung_box, lag=24, dof=11)%>%
+  kable(caption = "Ljung box test for ets_M,A,M") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+The three of these models have lower than 0.05 p-value on ljung box test, hence we focus on the residuals autocorrelations. In order to decide whether or not the model with p-value less than 0.05 on the ljung-box test should be chosen to generate forecasts, it is important to look at the auto-correlations for the models; as discussed in the lectures what matters is the magnitude of auto-correlations, if auto-correlations are smaller then it does not matter. It can be seen from `gg_tsresiduals`plot that most of the lags are within the -0.1 and 0.1 range except for one lag that goes over the 0.1 range int the ACF plot.
+
+```{r}
+fit_ets %>%
+  select(State, Industry, ets_aadm)%>%
+  gg_tsresiduals() +
+   labs(title="ETS(A,Ad,M")
+  
+ fit_ets %>%
+  select(State, Industry, ets_mam)%>%
+  gg_tsresiduals()+
+   labs(title="ETS(M,A,M")
+fit_ets %>%
+  select(State, Industry, ets_auto)%>%
+  gg_tsresiduals() +
+   labs(title="ETS(M,Ad,M")
+  
+```
+The AC residuals look smaller within the  range of -0.1 and 0.1 but innovation residuals do not look completely white noise for the ETS(A,Ad,M) model. The histogram of residuals for ETS(M,Ad,M) model looks left skewed. 
+Lets also look at the parameter estimates for ETS(M,Ad,M) model:
+
+
+
+
+```{r}
+fit_ets %>%
+  tidy(scipen=999) %>%
+  select(.model, term, estimate) %>%
+  filter(.model %in% "ets_auto") %>%
+  kbl(caption = "Parameter estimates") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+
+Having discussed the specified models and the model produced by the ETS, lets produce forecasts on training data with these models for the next four years i.e. 2016-2020.
+
+#### Forcasting with the ETS models
+
+```{r}
+# producing forecasts with the above specified models 
+
+ets_forecasts <- fit_ets %>%
+  forecast(h = "4 years") 
+
+ets_forecasts %>%
+  autoplot(tail(myseries_training, 12*10), level = NULL) +
+  labs(title = "Forecasts for the next 4 year", y = "$ (millions)") +
+  theme_minimal()
+
+
+```
+We can observe from the plot that `ets_auto` ETS(M,Ad,M) model is closer --almost identical-- to the `ets_aadm` ETS(A,Ad,M) method. Why is this? This is because the errors component does not have a significant impact on the forecasts, and also both these models have additive trend -- trend component affects the forecasts significantly -- hence we see that ETS(M,Ad,M) and ETS(A,Ad,M) are closer in terms of their forecasts. Generally, all three models have captured the seasonality and trend well, however, we can see that ETS(M,A,M) models forecasts slightly higher Turnover than other two models. 
+
+We can further look at the fitted values from `ets_auto` ETS(M,Ad,M) and ETS(A,Ad,M) methods against the actual values.
+
+```{r}
+ets_auto_fit <- fit_ets %>%
+  select(ets_auto)
+
+aadm_fit <- fit_ets %>%
+  select(ets_aadm)
+
+mam_fit <- fit_ets %>%
+  select(ets_mam)
+
+myseries_training %>%
+  autoplot(Turnover) +
+  autolayer(fitted(ets_auto_fit), colour = "red") +
+  labs(title = "Fitted against the actual values")+
+  theme_minimal() 
+
+myseries_training %>%
+  autoplot(Turnover) +
+  autolayer(fitted(aadm_fit), colour = "green") +
+  labs(title = "Fitted against the actual values")+
+  theme_minimal() 
+
+myseries_training %>%
+  autoplot(Turnover) +
+  autolayer(fitted(mam_fit), colour = "blue") +
+  labs(title = "Fitted against the actual values")
+
+```
+
+#### Test set and evaluating accuracy of models
+
+Now lets apply this data to the test set. Applying this model to the test allows us to see how well does the model perform on the test set -- the part of the series it has not seen. The main reason we do this is to check if the model overfits the training data. If it does then clearly the model is not enough to generate prediction on set on observation it has not seen yet, although we know from AICc score that the ETS(M,Ad,M) model `ets_auto` model will be good for prediction than other models specified earlier. 
+
+
+```{r}
+ets_forecasts %>%
+  autoplot(tail(myseries_test, 12*4), level = NULL) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA model", y ="millions $")
+
+accuracy(ets_forecasts, myseries) %>%
+  select(.model:MASE) %>%
+   kbl(caption = "Accuracy measures") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+On the test set, ETS(M,A,M) method does much better than other models. The RMSE, MASE, MAE and MAPE scores for the ETS(M,A,M) model are actually the lowest among the three models. In the next I analyse the ARIMA models and then compare the ETS model with the best ARIMA model to see which one is more suitable.
+
+### ARIMA models
+
+#### Creating stationary series
+
+As discussed earlier in the report, this series have:
+
+- Trend
+- Seasonality
+- Variance
+
+
+```{r}
+myseries %>%
+  autoplot(log(Turnover)) +
+  labs(title = "Tranformation", y ="log transformed series (Turnover)") +
+  theme_bw()
+```
+
+In order to use ARIMA model to make forecasts, the data would need to be stationary -- the series would not exhibit any trend and seasonality and have constant variance with no predictable patterns in the long-term.^[https://otexts.com/fpp3/stationarity.html] This means that I would have to transform the data to remove variance and then make it stationary by stabilizing the mean of the series. 
+
+The steps to make the time series stationary:
+
+1 - Transform the series -- remove the variance from the data. 
+2 - Difference the series
+  a - seasonal difference
+  b - regular difference (non-seasonal data)
+  
+The reason we do the seasonal difference first is because it might also remove the trend, it depends on how much there is through out the year. We difference the data to remove the unit root process -- the trend that is NOT really a trend.
+
+
+#### Step-1: Transformaing the series
+
+Let's transform the series, using the $lambda$ value as recommended by the `guerrero` function, which is 0.056. I could also use log since the given value of $lambda$ is close to zero. 
+
+```{r}
+myseries %>%
+  autoplot(box_cox(Turnover, lambda = 0.056)) +
+  labs(title = "Box-cox transformed turnover") +
+  xlab("Month")+
+  ylab("Turnover: millions $") +
+  theme_bw()
+
+```
+
+
+Given that I have removed the variance from series, in the next step I will difference the series, that is I will take the difference of the consecutive observations; **differenced series is the change between each observation in the original series**. This gives us a **stabilized mean** which then allows us to fit ARIMA models to the stationary-series. Sometimes the series may require second-order difference as well. However, in case of seasonal difference: the differences is the change between one seasonal period to the next.
+
+
+#### Step-2: Difference the series
+
+In this step I seasonally difference the series first, and then decide whether or not to take the second difference of the series. In order to do that I will examine the ACF and PACF plots of the **differenced** series, and run tests such as KPSS test, and `unitroot_ndiff` on the seasonally **difference-d** series.
+
+```{r}
+myseries_training %>%
+  gg_tsdisplay(difference(box_cox(Turnover, lambda = 0.056), lag = 12),
+plot_type="partial")
+
+```
+
+In the ACF plot, I can see that the ACF decays in a sine-wave manner (sinusoidal) while in the PACF, lags decay exponentially. And while the first lag in PACF is large and significant and the second lag is marginally significant,the rest of the lags are insignificant. Lag 12 and 24 in PACF are the seasonal lags and are significant, while lag 13 and 25 are the non-seasonal significant lags. Also, I note that lag 16 is marginally significant in PACF. In the ACF plot, lags 1 to 9 are significant but decaying and lag 12 is just slightly significant; lag 16 onward the lags become more significant. In ACF plot, lags are following a sine-wave pattern. Looking at the innovation residuals I observe some variance, which indicates that may be second order difference would be required. But lets use `unitroot_ndiff` to check if second order differencing (regular difference) is required.
+
+Please note that both that these functions are applied to the seasonally differenced series!
+
+```{r}
+
+myseries_training %>% 
+features(difference(box_cox(Turnover, lambda = 0.056), lag = 12), 
+         features = lst(unitroot_kpss, unitroot_ndiffs)) %>%
+  kable(caption = "KPSS and unit root ndiff tests")%>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+# myseries_training %>%
+#   features(difference(box_cox(Turnover, lambda = 0.056), lag=12), list(unitroot_nsdiffs, unitroot_ndiffs)) %>%
+#   kable(caption = "Unit roots ndiff and nsdiff tests")%>%
+#   kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+The `unitroot_ndiff` show that there is no need to further difference the series. And KPSS test p-value is greater than 0.05, hence we fail to reject the null hypothesis -- null hypothesis is that the series is stationary.
+
+
+#### Finding Appropriate ARIMA models:
+
+Here, my goal is to find an appropriate ARIMA model based on the ACF and PACF plots as seen above.
+
+The significant spikes at lag 1 & 2 in the PACF suggests a non-seasonal AR(2) component, although I can also include lag 15 which is quiet significant, usually, however, we ignore the lags after the first seasonal lag even if they are significant. The significant spike at lag 12 & 24 in the PACF suggests a seasonal AR(2) component. Consequently, I can begin with an ARIMA(2,0,0)(2,1,0) model, indicating a seasonal difference (D=1), and non-seasonal AR(p=2) and seasonal AR(P=2) component. 
+
+If I choose to begin with the ACF, I may select an ARIMA(0,0,9)(0,1,2) model, because lags1 to 9 are significant non-seasonal lags suggesting an MA(q=9) component; a seasonal difference (D=1), and the seasonally significant lags at 12 and 24 indicate a seasonal MA(Q=2) component. 
+
+It is usually difficult to see the interactions between the AR and MA components of ARMA. Usually when we choose a model we either look at the MA component solely or AR component solely. If we consider only the MA component, we immediately discount the AR component. That is to say that we do not consider any lags from the PACF to be interpretable, and exclude the AR components by putting "p" and "P" equal to 0 in our model. Hence, the ARIMA model we choose becomes ARIMA(p=0,d,q)(P=0,D,Q)[m]. However, this is not to say that we can never specify any combination of the AR and MA components in our model. In fact I will specify ARIMA(2,0,0)(0,1,1) model. The point I want to make here is that usually it is difficult to fully assess the extent of interaction between AR and MA components by looking at just the ACF and PACF plots. 
+
+I suggest ARIMA(2,0,0)(0,1,1) model by considering the two non-seasonal significant lags from the PACF, AR(p=2), 1 significant seasonal lag from ACF, MA(Q=1), and a seasonal difference (D=1).
+
+I also suggest an ARIMA(2,0,1)(2,1,1): I consider the two non-seasonal lags, AR(p=2), and two seasonal lags, AR(P=2), from PACF; I also consider 1 non-seasonal significant lag from the ACF, MA(q=1), and one seasonal lags, MA(Q=1), and a seasonal difference.
+
+I will also include ARIMA(0,0,7)(2,1,0): I consider seven non-seasonal lags (AC's with the value above 0.3) from ACF, MA(q=7), and 2 seasonal lags from the PACF, AR(P=2), and a seasonal difference, D=1.
+
+I will also include an automatically selected ARIMA model: `auto_arima` and `arima_Best`; for the latter I will set some constraints as specified in the model in the below code chunk.
+
+**Please note that in all of the manually specified models the series have been difference-d seasonally that is D=1 and d=0 -- no regular differencing.** 
+
+
+```{r}
+fit_arima <- myseries_training %>%
+  
+  model(
+    auto_arima = ARIMA(box_cox(Turnover, lambda = 0.056)),
+    arima200210 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,0) + PDQ(P=2,D=1,Q=0)),
+    arima009012 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(0,0,9) + PDQ(P=0,D=1,Q=2)),
+    arima200011 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,0) + PDQ(0,1,1)),
+    arima201211 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,1) + PDQ(P=2,D=1,Q=1)),
+    arima007210 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(0,0,7) + PDQ(P=2,D=1,Q=0))
+)
+
+
+fit_arima %>%
+  kbl(caption = "ARIMA models") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+
+The ARIMA model automatically produced by the function is ARIMA(1,0,0)(1,1,0)[12]) with drift. With drift model implies that the model has a constant term. The automatically produced model considers 1 non-seasonal PACF lag i.e. AR(p=1), and 1 seasonal lags from PACF i.e. AR(P=1), a seasonal difference i.e. D=1, and none from the ACF, therefore MA component is not considered by the `auto_arima` model.
+
+We can use to AIC$_c$ to compare all the models using the `glance()` function from the fabletools package.
+
+```{r}
+
+glance(fit_arima) %>%
+  arrange(AICc) %>%
+  select(State, Industry, .model, AIC, AICc, BIC) %>%
+  kbl(caption = "AIC scores from ARIMA models") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+
+
+Lets focus on the AIC$_c$ score of all the models. Please note that all of the specified models have been differenced seasonally i.e. D= 1 and there is no regular differencing of the series i.e. d=0, also the automatically produced model has a seasonal difference and **no** regular difference. Hence, I can compare models including the automatically produced model based on their AIC$_C$ scores.
+
+We focus on the model with the minimum AIC$_c$ score -- the reasons for doing this have been discussed earlier in the previous section. The automatically produced model i.e. ARIMA(1,0,0)(1,1,0) is worst performing model among all six models. The best performing model is ARIMA(2,0,1)(2,1,1), which is some combination of the AR and MA components. The second best performing model is ARIMA(2,0,0)(0,1,1) model. Each of these 'best' models consider interaction between AR and MA components. 
+
+lets look at the automatic ARIMA(2,0,1)(2,1,1) model residuals using `gg_tsresiduals()` to check if the residuals are white noise. 
+
+```{r}
+fit_arima %>%
+  select(arima201211) %>%
+  gg_tsresiduals()
+
+```
+
+```{r}
+fit_arima %>%
+  select(arima201211) %>% 
+  report()
+
+fit_arima %>%
+  select(arima201211) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 7) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+
+The ACF of the residuals for ARIMA(2,0,1)(2,1,1) looks like white noise and the histogram has a symmetric shape although a bit skewed to the left. For the most part lags in the ACF residuals plot are within the blue lines -- Lags 16,20,22 and 23 are significant in this plot. The innovation residuals for this model also look white noise; there seems some variance here, though not every significant.
+
+Although looking at the p-value from the ljung-box test, it appears that the chosen model is not the best performing model. I can get R to search rigorously for a better model by setting some constraints, as done in the code chuck below, and then use ljung box test to assess if this new model performs better than the ARIMA(2,0,1)(2,1,1).
+
+```{r}
+
+fit_best_arima <- myseries_training %>%
+  model(
+    arima_best = ARIMA(box_cox(Turnover, lambda = 0.056),
+    stepwise = FALSE,
+    approximation = FALSE,
+    order_constraint = p + q + P + Q <= 9 & (constant + d + D <= 2)
+  ))
+
+fit_best_arima %>%
+  kbl(caption = "Best ARIMA model") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+glance(fit_best_arima) %>%
+  select(State, Industry, .model, AIC, AICc) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+  
+```
+
+```{r}
+arima202212 <- fit_best_arima %>%
+  select(State, Industry, arima_best) %>% 
+  report()
+
+
+fit_best_arima %>%
+  select(State:arima_best) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 9) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+
+R returns the model ARIMA(2,0,2)(2,1,2) after taking a bit of time generating it. Running the ljung box test, I see that the p-value for this model is still less than 0.05, it is 0.0039, although it is higher than the p-value for ARIMA(2,0,1)(2,1,1) model, which was 0.000065. There is not much difference in the AIC$_c$ values between these models, but the p-value from the ljung box test is better for this model than the ones specified above including the ets_auto model ARIMA(1,0,0)(1,1,0). 
+
+Lets look at the residuals for this model:
+
+```{r}
+fit_best_arima %>%
+  select(State:arima_best) %>%
+  gg_tsresiduals()
+```
+
+In order to decide whether or not the model with p-value less than 0.05 on the ljung-box test should be chosen to generate forecasts, it is important to look at the auto-correlations for the model: as discussed in the lectures what matters is the magnitude of auto-correlations, if auto-correlations are smaller then it does not matter. It can be seen from `gg_tsresiduals`plot for the ARIMA(2,0,2)(2,1,2) model that most of the lags are within the -0.1 and 0.1 range except for one lag that goes over the 0.1 range. Using the augment function, I can extract the regular residuals and innovation residuals for the ARIMA(2,0,2)(2,1,2) model.
+
+```{r}
+fit_best_arima %>%
+  select(State:arima_best) %>%
+  augment() %>%
+  head(10) %>% 
+  kbl() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+
+
+#### Generating forecasts
+
+Taking in to account the AIC$_c$, the ljung-box test p-value and the residuals ACF plot, It appears to me that the ARIMA(2,0,2)(2,1,2) model is actually better than the ARIMA(2,0,1)(2,1,1) model from above. Nevertheless I will use both these models to generate forecasts:
+
+```{r}
+arima202212_forecasts <- arima202212 %>%
+  forecast(h="4 years")
+
+arima202212_forecasts %>%
+  autoplot(tail(myseries_training, 12*10)) + 
+  theme_bw() +
+  labs(title = "4 years Forecasts from ARIMA model", y ="millions $") 
+  
+
+arima202212_forecasts %>%
+  head(10) %>%
+  kbl(caption = "First ten rows of the forecasts from the ARIMA(202)(212)[12]")%>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+arima201211 <- fit_arima %>%
+  select(State, Industry, arima201211)
+
+arima201211_forecasts <- arima201211 %>%
+  forecast(h="4 years")
+
+arima201211_forecasts %>%
+  autoplot(tail(myseries_training, 12*10)) + 
+  theme_bw() +
+  labs(title = "4 years Forecasts from ARIMA model", y ="millions $")
+  
+arima201211_forecasts %>%
+  head(10) %>%
+  kbl(caption = "First ten rows of the forecasts from the ARIMA(201)(211)[12]")%>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+
+Both these models seem to have captured the seasonality and trend in the series really well. As per my opinion, the models have made forecast quiet well.  
+
+In the above plot we can see the model does pretty well on the training data. It can be observed from the plot that the red line (forecast from the auto_arima) is almost the same as the actual training data.
+
+
+#### Evaluating accuracy 
+
+
+Now lets apply this data to the test set. Applying this model to the test allows us to see how well does the model perform on the test set -- the part of the series it has not seen. The main reason we do this is to check if the model overfits the training data. If it does then clearly the model is not enough to generate prediction on set on observation it has not seen yet.
+
+```{r}
+
+
+arima201211_forecasts %>%
+  autoplot(tail(myseries, 12*4)) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA(2,0,1)(2,1,1)[12] model", y ="millions $")
+
+arima202212_forecasts %>%
+  autoplot(tail(myseries, 12*4)) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA(2,0,2)(2,1,2)[12] model", y ="millions $")
+
+accuracy(arima201211_forecasts, myseries) %>%
+   kbl(caption = "Accuracy measures for ARIMA(2,0,1)(2,1,1)[12]") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+
+accuracy(arima202212_forecasts, myseries) %>%
+   kbl(caption = "Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+On the test set, ARIMA(2,0,2)(2,1,2) method performs better by a very small margin than ARIMA(2,0,1)(2,1,1) model. The RMSE score for both these models is the same. The MASE score for the ARIMA(2,0,1)(2,1,1) is 1.69 while MASE for the ARIMA(2,0,2)(2,1,2) is 1.68. The models pretty much the same on test set. I will choose ARIMA(2,0,2)(2,1,2) model to compare with the ETS(M,A,M) model. 
+
+
+### ETS V ARIMA and Final assessment 
+
+#### Performance on the training data
+
+The ETS model chosen from my analysis of the series was ETS model was ETS(M,Ad,M) model. Lets run some accuracy tests on this ETS model:
+
+```{r}
+ets_mam <- ets_forecasts %>%
+  filter(.model %in% "ets_mam")
+
+
+accuracy(ets_mam, myseries) %>%
+  select(.model:MASE) %>%
+   kbl(caption = "Accuracy measures for ETS(M,A,M)") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+accuracy(arima202212_forecasts, myseries) %>%
+   kbl(caption = "Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+On the accuracy test, ETS(M,A,M) method has lower RMSE and MASE than ARIMA(2,0,2)(2,1,2). In fact the difference in RMSE, MAE and MAPE are much greater between these two models. The ETS(M,A,M) appears to outperform the ARIMA(2,0,2)(2,1,1) model. 
+
+```{r}
+fit_ets %>%
+  select(State,Industry,ets_mam) %>%
+  gg_tsresiduals()+
+  labs(title = "Residuals plot for the ETS(M,A,M) model")
+
+arima202212 %>%
+  gg_tsresiduals() +
+  labs(title = "Residuals plot for the ARIMA(2,0,2)(2,1,2)")
+  
+  
+```
+
+The ACF residuals for ARIMA(2,0,2)(2,1,2) has most lags within the significance level -- below the blue line. The histogram of residuals also look symmetric and the innovation residuals are centered around zero and there is almost no variance -- white noise.In contrast the ETS(M,A,M) model has a few lags that go beyond the significance level and residual histogram is not as symmetric as for the ARIMA model. The innovation residuals look white noise. Nevertheless we can see that seasonality in the ETS and ARIMA models have been removed. The seasonal lags in ACF plots for both these models are insignificant.
+
+On the ljung box test both these models have lower than 0.05 p-value, hence we focus more on the residuals auto correlations. As discussed above the residuals auto-correlation are small; the value for most lags range between -0.1 and 0.1 or slightly above this range. I could argue that although these models are not perfect and they perform better among other specified models. I can look at the accuracy measures on the test to assess whether or not the model performs well.
+
+#### Performance on full data
+
+Lets have these models generate forecasts on full data set.
+
+```{r}
+fit_arima_ets <- myseries %>%
+  model(
+    arima = ARIMA(box_cox(Turnover, lambda = 0.056) ~ 1 + pdq(2,0,2) + PDQ(2,1,2)),
+    ets = ETS(Turnover ~ error("A") + trend("Ad") + season("M"))
+  )
+
+
+```
+
+```{r}
+fit_arima_ets %>%
+  select(State,Industry, arima) %>%
+  report()
+
+gg_tsresiduals(fit_arima_ets %>% select(arima), lag_max = 24) %>% labs(title = "residuals from arima")
+
+fit_arima_ets %>%
+  select(State, Industry, arima) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag = 24, dof = 9)%>%
+  kable(caption = "ljung box test for arima model")
+
+fit_arima_ets %>%
+  select(State, Industry, ets) %>%
+  report()
+
+gg_tsresiduals(fit_arima_ets %>% select(ets), lag_max = 16) %>% labs(title = "residuals from ets")
+
+fit_arima_ets %>%
+  select(State, Industry, ets) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag = 24, dof = 11) %>%
+  kable(caption = "ljung box test for ets model") 
+
+
+```
+
+The innovation residuals from the arima model appear white noise, while the innovation residuals from the ets model tends to show variance.
+The ACF plot shows that for most part the lags for arima are within the significance level, while a few lags for ets model ACF residuals plot tend to go beyond the significance level. The shape of histogram of residuals is symmetric for both these models.
+
+
+#### Forecasts and prediction intervals
+
+
+
+```{r}
+fc_ets <-fit_arima_ets %>%
+  select(State, Industry, ets)%>%
+  forecast(h = "4 years") 
+
+fc_ets%>%
+  autoplot(tail(myseries, 12*10), level = 80) +
+  labs(title = "ARIMA 4 years forecasts", y = "Millions $")
+
+fc_ets %>%
+  hilo(level=80)
+
+```
+
+#### ETS Model
+
+```{r}
+
+
+fc_arima <- fit_arima_ets %>%
+  select(State, Industry, arima) %>%
+  forecast(h = "4 years")
+
+fc_arima %>%
+  autoplot(tail(myseries, 12*10)) +
+  labs(title = "ETS 4 years forecasts")
+
+fc_arima %>%
+  hilo(level = 80)
+
+```
+
+
+#### Comparing with the ABS data
+
+```{r}
+abs_data <- abs_data %>%
+  mutate(Monthly = yearmonth(date)) %>%
+  as_tsibble(
+    index = date,
+    key = series
+  )
+
+abs_data<- abs_data %>%
+  rename(Turnover = value)%>%
+  rename(Industry = series)
+abs_data %>%
+  rename(Month = Monthly)
+ 
+# abs_data%>%
+#   accuracy(fc_ets)
+#  
+# fabletools::accuracy.fbl_ts(fc_arima, abs_data)
+
+```
+#### Final Conclusiom
+
+Based on the accuracy measures on the training and the complete myseries data set, I can draw the conclusion that ARIMA model performs better than ETS model. 
+
+
+#### Key benefits and limitations
+
+
+The key benefits of the both arima and ets models is that they have captured seasonality and trend really well in the data, although I believe that my data set had strong cyclic patterns that had been not been fully captured. This is the limitation that these models had in my opinion.
+
+
+

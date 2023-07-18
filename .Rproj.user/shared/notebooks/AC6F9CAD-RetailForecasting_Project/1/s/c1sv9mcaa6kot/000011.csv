@@ -1,0 +1,8 @@
+"0",""
+"0","myseries %>%"
+"0","  autoplot(Turnover) +"
+"0","  #labs(title = ""Monthly turnover of Pharmaceutical, cosmetic & toiletry goods"","
+"0","  xlab(""Months"")+"
+"0","  ylab (""Monthly turnover in AUD"") +"
+"0","  scale_y_continuous(labels = scales::dollar) +"
+"0","  theme_classic()"

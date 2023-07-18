@@ -1,0 +1,3 @@
+"0","aus_airpassengers %>%"
+"0","  model(ARIMA(log(Passengers))) %>%"
+"0","  gg_tsresiduals()"

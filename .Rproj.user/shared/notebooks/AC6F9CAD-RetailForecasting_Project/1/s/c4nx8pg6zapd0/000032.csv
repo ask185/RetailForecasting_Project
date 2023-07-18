@@ -1,0 +1,7 @@
+"0",""
+"0","fit_ets %>%"
+"0","  select(ets_aadm)%>%"
+"0","  augment()%>%"
+"0","  features(.innov, ljung_box, lag=24, dof=11)%>%"
+"0","  kable(caption = ""Ljung box test for ets_M,A,M"") %>%"
+"0","  kable_classic_2(full_width = F, html_font = ""Cambria"")"

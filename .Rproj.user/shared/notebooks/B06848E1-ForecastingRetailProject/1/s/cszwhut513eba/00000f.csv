@@ -1,0 +1,4 @@
+"0","fitB %>%"
+"0","  select(arima_best) %>%"
+"0","  augment() %>%"
+"0","  head(10)"

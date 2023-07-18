@@ -1,0 +1,318 @@
+---
+title: "ForecastingRetailProject"
+author: "Aryan Sultan"
+date: '2022-05-16'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, eval = TRUE, message = T, warning = T)
+library(fpp3)
+library(tidyverse)
+library(fable)
+library(kableExtra)
+options(scipen=999)
+```
+
+```{r}
+# Use your student ID as the seed
+set.seed(31245307)
+myseries <- aus_retail %>%
+  # Remove discontinued series
+  filter(!(`Series ID` %in% c("A3349561R","A3349883F","A3349499L","A3349902A",
+                        "A3349588R","A3349763L","A3349372C","A3349450X",
+                        "A3349679W","A3349378T","A3349767W","A3349451A"))) %>%
+  # Select a series at random
+  filter(`Series ID` == sample(`Series ID`,1))
+```
+
+
+### Forecasting
+
+#### ARIMA model
+
+As discussed earlier in the report, this series have:
+
+- Trend
+- Seasonality
+- Variance
+
+
+```{r}
+myseries %>%
+  autoplot(log(Turnover)) +
+  labs(title = "Tranformation", y ="log transformed series (Turnover)") +
+  theme_bw()
+```
+In order to use ARIMA model to make forecasts, the data would need to be stationary -- the series would not exhibit any trend and seasonality and have constant variance with no predictable patterns in the long-term.^[https://otexts.com/fpp3/stationarity.html] This means that I would have to transform the data to remove variance and then make it stationary by stabilizing the mean of the series. 
+
+The steps to make the time series stationary:
+
+1 - Transform the series -- remove the variance from the data. 
+2 - Difference the series
+  a - seasonal difference
+  b - regular difference (non-seasonal data)
+  
+The reason we do the seasonal difference first is because it might also remove the trend, it depends on how much there is through out the year. We difference the data to remove the unit root process -- the trend that is NOT really a trend.
+
+
+#### Step-1: Transformaing the series
+
+Let's transform the series, using the $lambda$ value as recommended by the `guerrero` function, which is 0.056. I could also use log since the given value of $lambda$ is close to zero. 
+
+```{r}
+myseries %>%
+  autoplot(box_cox(Turnover, lambda = 0.056)) +
+  labs(title = "Box-cox transformed turnover") +
+  xlab("Month")+
+  ylab("Turnover: millions $") +
+  theme_bw()
+
+
+
+# myseries %>%
+#   features(Turnover, features = guerrero)
+
+# myseries %>%
+#   features(Turnover, features = lst(guerrero))
+```
+Given that I have removed the variance from series, in the next step I will difference the series, that is I will take the difference of the consecutive observations; **differenced series is the change between each observation in the original series**. This gives us a **stabilized mean** which then allows us to fit ARIMA models to the stationary-series. Sometimes the series may require second-order difference as well. However, in case of seasonal difference: the differences is the change between one seasonal period to the next.
+
+
+#### Step-2: Difference the series
+
+In this step I seasonally difference the series first, and then decide whether or not to take the second difference of the series. In order to do that I will examine the ACF and PACF plots of the **differenced** series, and run tests such as KPSS test, and `unitroot_ndiff` on the seasonally **difference-d** series.
+
+```{r}
+myseries_training %>%
+  gg_tsdisplay(difference(box_cox(Turnover, lambda = 0.056), lag = 12),
+plot_type="partial")
+
+```
+
+In the ACF plot, I can see that the ACF decays in a sine-wave manner (sinusoidal) while in the PACF, lags decay exponentially. And while the first lag in PACF is large and significant and the second lag is marginally significant,the rest of the lags are insignificant. Lag 12 and 24 in PACF are the seasonal lags and are significant, while lag 13 and 25 are the non-seasonal significant lags. Also, I note that lag 16 is marginally significant in PACF. In the ACF plot, lags 1 to 9 are significant but decaying and lag 12 is just slightly significant; lag 16 onward the lags become more significant. In ACF plot, lags are following a sine-wave pattern. Looking at the innovation residuals I observe some variance, which indicates that may be second order difference would be required. But lets use `unitroot_ndiff` to check if second order differencing (regular difference) is required.
+
+Please note that both that these functions are applied to the seasonally differenced series!
+
+```{r}
+
+myseries_training %>% 
+features(difference(box_cox(Turnover, lambda = 0.056), lag = 12), 
+         features = lst(unitroot_kpss, unitroot_ndiffs)) %>%
+  kable(caption = "KPSS and unit root ndiff tests")%>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+# myseries_training %>%
+#   features(difference(box_cox(Turnover, lambda = 0.056), lag=12), list(unitroot_nsdiffs, unitroot_ndiffs)) %>%
+#   kable(caption = "Unit roots ndiff and nsdiff tests")%>%
+#   kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+The `unitroot_ndiff` show that there is no need to further difference the series. And KPSS test p-value is greater than 0.05, hence we fail to reject the null hypothesis -- null hypothesis is that the series is stationary.
+
+
+#### Finding Appropriate ARIMA models:
+
+Here, my goal is to find an appropriate ARIMA model based on the ACF and PACF plots as seen above.
+
+The significant spikes at lag 1 & 2 in the PACF suggests a non-seasonal AR(2) component, although I can also include lag 15 which is quiet significant, usually, however, we ignore the lags after the first seasonal lag even if they are significant. The significant spike at lag 12 & 24 in the PACF suggests a seasonal AR(2) component. Consequently, I can begin with an ARIMA(2,0,0)(2,1,0) model, indicating a seasonal difference (D=1), and non-seasonal AR(p=2) and seasonal AR(P=2) component. 
+
+If I choose to begin with the ACF, I may select an ARIMA(0,0,9)(0,1,2) model, because lags1 to 9 are significant non-seasonal lags suggesting an MA(q=9) component; a seasonal difference (D=1), and the seasonally significant lags at 12 and 24 indicate a seasonal MA(Q=2) component. 
+
+It is usually difficult to see the interactions between the AR and MA components of ARMA. Usually when we choose a model we either look at the MA component solely or AR component solely. If we consider only the MA component, we immediately discount the AR component. That is to say that we do not consider any lags from the PACF to be interpretable, and exclude the AR components by putting "p" and "P" equal to 0 in our model. Hence, the ARIMA model we choose becomes ARIMA(p=0,d,q)(P=0,D,Q)[m]. However, this is not to say that we can never specify any combination of the AR and MA components in our model. In fact I will specify ARIMA(2,0,0)(0,1,1) model. The point I want to make here is that usually it is difficult to fully assess the extent of interaction between AR and MA components by looking at just the ACF and PACF plots. 
+
+I suggest ARIMA(2,0,0)(0,1,1) model by considering the two non-seasonal significant lags from the PACF, AR(p=2), 1 significant seasonal lag from ACF, MA(Q=1), and a seasonal difference (D=1).
+
+I also suggest an ARIMA(2,0,1)(2,1,1): I consider the two non-seasonal lags, AR(p=2), and two seasonal lags, AR(P=2), from PACF; I also consider 1 non-seasonal significant lag from the ACF, MA(q=1), and one seasonal lags, MA(Q=1), and a seasonal difference.
+
+I will also include ARIMA(0,0,7)(2,1,0): I consider seven non-seasonal lags (AC's with the value above 0.3) from ACF, MA(q=7), and 2 seasonal lags from the PACF, AR(P=2), and a seasonal difference, D=1.
+
+I will also include an automatically selected ARIMA model: `auto_arima` and `arima_Best`; for the latter I will set some constraints as specified in the model in the below code chunk.
+
+**Please note that in all of the manually specified models the series have been difference-d seasonally that is D=1 and d=0 -- no regular differencing.** 
+
+
+```{r}
+fit_arima <- myseries_training %>%
+  
+  model(
+    auto_arima = ARIMA(box_cox(Turnover, lambda = 0.056)),
+    arima200210 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,0) + PDQ(P=2,D=1,Q=0)),
+    arima009012 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(0,0,9) + PDQ(P=0,D=1,Q=2)),
+    arima200011 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,0) + PDQ(0,1,1)),
+    arima201211 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(2,0,1) + PDQ(P=2,D=1,Q=1)),
+    arima007210 = ARIMA(box_cox(Turnover, lambda = 0.056) ~  1 + pdq(0,0,7) + PDQ(P=2,D=1,Q=0))
+)
+
+
+fit_arima %>%
+  kbl(caption = "ARIMA models") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+*how to add drift as in constant to manually selected models*
+
+The ARIMA model automatically produced by the function is ARIMA(1,0,0)(1,1,0)[12]) with drift. With drift model implies that the model has a constant term. The automatically produced model considers 1 non-seasonal PACF lag i.e. AR(p=1), and 1 seasonal lags from PACF i.e. AR(P=1), a seasonal difference i.e. D=1, and none from the ACF, therefore MA component is not considered by the `auto_arima` model.
+
+We can use to AIC$_c$ to compare all the models using the `glance()` function from the `fabletools` package.[]
+
+```{r}
+
+glance(fit_arima) %>%
+  arrange(AICc) %>%
+  select(State, Industry, .model, AIC, AICc, BIC) %>%
+  kbl(caption = "AIC scores from ARIMA models") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+Lets focus on the AIC$_c$ score of all the models. Please note that all of the specified models have been differenced seasonally i.e. D= 1 and there is no regular differencing of the series i.e. d=0, also the automatically produced model has a seasonal difference and **no** regular difference. Hence, I can compare models including the automatically produced model based on their AIC$_C$ scores.
+
+We focus on the model with the minimum AIC$_c$ score -- the reasons for doing this have been discussed earlier in the previous section. The automatically produced model i.e. ARIMA(1,0,0)(1,1,0) is worst performing model among all six models. The best performing model is ARIMA(2,0,1)(2,1,1), which is some combination of the AR and MA components. The second best performing model is ARIMA(2,0,0)(0,1,1) model. Each of these 'best' models consider interaction between AR and MA components. 
+
+lets look at the automatic ARIMA(2,0,1)(2,1,1) model residuals using `gg_tsresiduals()` to check if the residuals are white noise. 
+
+```{r}
+fit_arima %>%
+  select(arima201211) %>%
+  gg_tsresiduals()
+
+```
+
+```{r}
+fit_arima %>%
+  select(arima201211) %>% 
+  report()
+
+fit_arima %>%
+  select(arima201211) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 7) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+```
+
+The ACF of the residuals for ARIMA(2,0,1)(2,1,1) looks like white noise and the histogram has a symmetric shape *although a bit skewed to the left*. For the most part lags in the ACF residuals plot are within the blue lines -- Lags 16,20,22 and 23 are significant in this plot. The innovation residuals for this model also look white noise. *there seems some variance here* 
+Although looking at the p-value from the ljung-box test, it appears that the chosen model is not the best performing model. I can get R to search rigorously for a better model by setting some constraints, as done in the code chuck below, and then use ljung box test to assess if this new model performs better than the ARIMA(2,0,1)(2,1,1).
+
+```{r}
+
+fitB <- myseries_training %>%
+  model(
+    arima_best = ARIMA(box_cox(Turnover, lambda = 0.056),
+    stepwise = FALSE,
+    approximation = FALSE,
+    order_constraint = p + q + P + Q <= 9 & (constant + d + D <= 2)
+  ))
+
+fitB %>%
+  kbl(caption = "Best ARIMA model") %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+
+glance(fitB) %>%
+  select(State, Industry, .model, AIC, AICc) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+  
+```
+```{r}
+fitB %>%
+  select(arima_best) %>% 
+  report()
+
+
+fitB %>%
+  select(arima_best) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag= 24, dof = 9) %>%
+  kable() %>%
+  kable_classic_2(full_width = F, html_font = "Cambria")
+```
+R returns the model ARIMA(2,0,2)(2,1,2) after taking a bit of time generating it. Running the ljung box test, I see that the p-value for this model is still less than 0.05, it is 0.0039, although it is higher than the p-value for ARIMA(2,0,1)(2,1,1) model, which was 0.000065. *there is not much difference in the AIC$_c$ values for this model and the one above, hence I do not see the reason why I should prefer this model over ARIMA(3,0,0)(2,1,1), especially it takes longer for R to generate it, and the improvements are marginal.* 
+
+Lets look at the residuals for this model:
+
+```{r}
+fitB %>%
+  select(arima_best) %>%
+  gg_tsresiduals()
+```
+
+In order to decide whether or not the model with p-value less than 0.05 on the ljung-box test should be chosen to generate forecasts, it is important to look at the auto-correlations for the model: ARIMA(2,0,2)(2,1,2); as discussed in the lectures what matters is the magnitude of auto-correlations, if auto-correlations are smaller then it does not matter. It can be seen from `gg_tsresiduals`plot that most of the lags are within the -0.1 and 0.1 range except for one lag that goes over the 0.1 range int the ACF plot. Using the augment function, I can extract the regular residuals and innovation residuals.
+
+```{r}
+fitB %>%
+  select(arima_best) %>%
+  augment() %>%
+  head(10)
+```
+
+Taking in to account the AIC$_c$, the ljung-box test p-value and the residuals ACF plot, It appears to me that the ARIMA(2,0,2)(2,1,2) model is actually better than the ARIMA(2,0,1)(2,1,1) model from above.
+
+lets forecast with the selected model i.e. ARIMA(2,0,2)(2,1,2).
+
+```{r}
+arima_forecasts <- fitB %>%
+  forecast(h="4 years") %>%
+  filter(.model == "arima_best") 
+
+arima_forecasts %>%
+  autoplot(tail(myseries_training, 12*10)) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA model", y ="millions $") 
+  
+
+arima_forecasts
+```
+The model seems to have captured the seasonality in the series really well. As per my opinion, the model has made forecast quiet well.  
+
+```{r}
+arima_auto_fit <- fitB %>%
+  select(arima_best)
+
+myseries_training %>%
+  autoplot(Turnover) +
+  autolayer(fitted(arima_auto_fit), colour = "red") +
+  labs(title = "ARIMA: Fitted values against the actual values", y ="millions $")+
+  theme_minimal()
+```
+
+In the above plot we can see the model does pretty well on the training data. It can be observed from the plot that the red line (forecast from the auto_arima) is almost the same as the actual training data.
+
+Now lets apply this data to the test set. Applying this model to the test allows us to see how well does the model perform on the test set -- the part of the series it has not seen. The main reason we do this is to check if the model overfits the training data. If it does then clearly the model is not enough to generate prediction on set on observation it has not seen yet.
+
+```{r}
+
+
+arima_forecasts %>%
+  autoplot(tail(myseries_test, 12*4)) + 
+  theme_bw() +
+  labs(title = "2 years Forecasts from ARIMA model", y ="millions $")
+
+
+
+accuracy(arima_forecasts, myseries) %>%
+   kbl(caption = "Accuracy measures") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+On the test set, ARIMA(2,0,2)(2,1,2) method does much better than other models. Remember that this model was produced by the ETS function itself. Hence it is safe to say now I have the best ETS model. In the next I analyse the ARIMA models and then compare the ETS model with the best ARIMA model to see which one is more suitable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

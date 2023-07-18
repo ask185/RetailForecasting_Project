@@ -1,0 +1,8 @@
+"0","arima_forecasts <- fitB %>%"
+"0","  forecast(h=""4 years"") %>%"
+"0","  filter(.model == ""arima_best"") "
+"0",""
+"0","arima_forecasts %>%"
+"0","  autoplot(tail(myseries_training, 12*10)) + "
+"0","  theme_bw() +"
+"0","  labs(title = ""2 years Forecasts from ARIMA model"", y =""millions $"") "

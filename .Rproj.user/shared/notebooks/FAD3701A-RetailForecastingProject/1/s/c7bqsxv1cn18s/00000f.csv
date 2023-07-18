@@ -1,0 +1,5 @@
+"0","ets_mam <- ets_forecasts %>%"
+"0","  filter(.model %in% ""ets_mam"")"
+"2","Error in filter(., .model %in% ""ets_mam"") : 
+  object 'ets_forecasts' not found
+"

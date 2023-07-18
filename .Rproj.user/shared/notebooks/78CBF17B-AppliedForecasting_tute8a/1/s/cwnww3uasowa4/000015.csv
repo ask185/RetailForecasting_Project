@@ -1,0 +1,6 @@
+"0","# REgular difefrence"
+"0",""
+"0","souvenirs %>%"
+"0","  features("
+"0","    difference(log(Sales), lag = 12),"
+"0","    features = lst(unitroot_kpss, unitroot_ndiffs))"

@@ -1,0 +1,354 @@
+---
+title: "tute_9a"
+author: "Aryan Sultan"
+date: '2022-05-16'
+output: html_document
+---
+
+```{r}
+library(fpp3)
+```
+
+# Tute 9
+
+# In AR model, y_t is the function of lags of itself;
+# a linear combination of its past values.
+# MA is the function of the lags of error terms, so it is not
+# the function of itself. 
+
+# Question 6
+
+# Simulation data:
+
+y <- numeric(100)
+e <- rnorm(100, sd=0.01)
+for (i in 2:100)
+  y[i] <- 0.6*y[i-1] + e[i]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+
+# our AR1 model needs a place to start, and in this case we 
+# starting with the value that is y1=0. 
+
+sim %>%
+  autoplot(y)
+
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+# the first lag from the PACF is 0.6 and the second lag
+# is only due to the random chance.There is large amount
+# of noise in this simulation. To reduce the noise we can 
+# change the value of sd, we can reduce the value of sd.
+# Looking at the ACF and PACF for choosing the AR and MR
+# models is a useful analytical technique.
+ 
+# Q6-b: What happens if we change the value if phi?
+
+y <- numeric(100)
+e <- rnorm(100, sd=0.01)
+for (i in 2:100)
+  y[i] <- 0.3*y[i-1] + e[i]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+
+# first we can see that the first lag of our PACF is roughly 
+# 0.3 - for simple AR models we can read it off easily from the
+# y axis. However, there might be a lag that spikes other than 
+# the first lag  and that is purely due to the random chance.
+
+y <- numeric(100)
+e <- rnorm(100, sd=0.01)
+for (i in 2:100)
+  y[i] <- 0.9*y[i-1] + e[i]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+
+# we see that the first lag for the PACF is 0.9. And we
+# see extremely slow decay in the ACF which is fine.
+
+# c. Code to generate MA(1) model
+
+y <- numeric(100)
+e <- rnorm(100, sd=0.01)
+for (i in 2:100)
+  # y[i] <- 0.3*y[i-1] + e[i] remove this bit from our model
+  y[i] <- e[i] + 0.6*e[i-1]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+# ACF lag 1 is also significant; and this decays quickly
+# when we reduce the noise (reduce the value of sd) we see
+# that the lags is a bit short of the theta value of 0.6
+# that is due to random chance. All other lags are insignificant
+
+# For MA(1) you expect one lag in ACF to be significant
+# For AR(1) you expect one lag in PACF to be significant
+# and often for the AR process you will have a slow decaying
+# ACF.For the MA both ACF and PACF show lag 1 as being significant
+# for the AR there is slow decay in ACF.
+
+# d. change theta to see the effects in the plot
+
+# lets first reduce the value of theta:
+
+y <- numeric(100)
+e <- rnorm(100, sd=0.01)
+for (i in 2:100)
+  # y[i] <- 0.3*y[i-1] + e[i] remove this bit from our model
+  y[i] <- e[i] + 0.3*e[i-1]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+# when we change the value of the theta the ACF is not strong enough
+# if I increase the value of theta to 0.9. The ACF is stronger
+# does not quiet reach the 0.9 but it is stronger. 
+# the ACF decreases quickly which tells me that this is not an AR process
+# the PACF has lags that do this positive/negative which tells me 
+# that this is an MA process.
+
+# lets put of these models together and create an ARMA model
+# ARMA(1,1) model.
+
+# ARMA(p=1, q=1)
+
+y <- numeric(100)
+e <- rnorm(100, sd= 1)
+for (i in 2:100)
+  y[i] <- 0.6*y[i-1] + e[i] + 0.6*e[i-1]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+
+# here we see the both patterns - the slow decay of ACF and the 
+# PACF shows us the positive/negative process which suggests that we
+# have an MA process. Any mixture of the two models cannot be 
+# identified easily by just looking at the ACF and PACF.
+# the AR process tends to have a strong effect on the behaviour of your data
+# and your forecasts.
+
+# f - AR(p=2)
+
+y <- numeric(100)
+e <- rnorm(100, sd= 1) 
+for (i in 3:100)
+  y[i] <- -0.8*y[i-1] + 0.3*y[i-2] + e[i]
+
+sim <- tsibble(idx = seq_len(100), y = y, index = idx)
+
+sim %>%
+  autoplot(y)
+
+sim %>%
+  gg_tsdisplay(y, plot_type = "partial")
+
+# c and q = 0
+# when I run the above code with for (i in 2:100) 
+# I will receive an error, that error exists because 
+# as I run the code, model goes back one step in the first
+# step of the process so it goes to y1 and two steps back in the
+# second part of the process. Here it goes back to y0. But this is a
+# problem because I have not defined what y0 is and it is outside
+# the length of data, therefore changing
+# the code from for (i in 2:100) to for (i in 3:100).
+# resolves the error
+# the data generated is non-stationary data.
+
+# Rules to identify if the data is stationary or non-stationary
+
+# constraints should be -1<phi2<1 + phi2<1
+
+# Question 7
+
+# ARIMA()
+```{r}
+aus_airpassengers %>%
+  autoplot(Passengers)
+```
+# determine differences, and order of the integration (1)
+# the plot is roughly linear but still requires transformation 
+# so lets do the log transformation
+
+```{r}
+aus_airpassengers %>%
+  autoplot(log(Passengers))+
+  geom_smooth(method = "lm")
+```
+# yep the data is now linear
+
+# we should consider both model; the one with and without 
+# a log transformation
+
+# through log transformation we have stabilized the variance
+# in the trend and now look at whether it is stationary or 
+# non-stationary.
+
+# do I need to do any differences?
+
+# there is an upward trend and trend is the function that changes overtime
+# our expectation of the data is changing overtime.Hence the data is
+# non-stationary therefore we need to difference our data
+
+```{r}
+aus_airpassengers %>%
+  autoplot(difference(log(Passengers)))+
+  geom_smooth(method = "lm")
+```
+# there is no seasonality as this is annual data set.
+
+```{r}
+
+aus_airpassengers %>%
+  gg_tsdisplay(difference(log(Passengers)), plot_type="partial")
+```
+# order of integration(I), d=1 (non-seasonal differences)
+
+# ARIMA(0,1,0) + c on the log(y)
+```{r}
+fit <- aus_airpassengers %>%
+  model(ARIMA(log(Passengers)))
+```
+# the model I get is ARIMA(0,10) with drift
+# when it adds drift or mean to the model this just means that it
+# has added c to the model
+
+# check the residuals for the model
+```{r}
+fit %>%
+  gg_tsresiduals()
+```
+# the position on the y axis is centered is on 0 that is the effect of the 
+# constant. If we had not the log transformed the data; there would have
+# been the slight skew in the innovation residuals-- the variance in the 
+# the shape of the innovation residuals. But we still get whiet noise
+```{r}
+aus_airpassengers %>%
+  model(ARIMA(log(Passengers))) %>%
+  gg_tsresiduals()
+```
+# lets forecast ten years a head
+```{r}
+fit %>%
+  forecast(h=10) %>%
+  autoplot(aus_airpassengers)
+
+# even though ARIMA requires stationary data, by process
+# of difference the data allows you to get behavior like trend
+# in this case, the trend is coming in through the combination of 
+# constant c is not equal to zero and the difference is equal to 1
+
+# Q7 b is done on the notebook 
+
+report(fit)
+
+# (1-B)log(y_t)=0.05 + 0.005 
+
+# d
+```
+
+```{r}
+fit <- aus_airpassengers %>%
+  model(
+    auto=ARIMA(log(Passengers)),
+    arima212c = ARIMA(log(Passengers) ~ 1 + pdq(p=2,d=1,q=2))
+  )
+
+fit %>%
+  forecast(h="10 years") %>%
+  autoplot(aus_airpassengers)
+
+fit %>%
+  accuracy()
+# turns out the ARIMA 212 model is performing better than the
+# automatically selected one.
+
+# why is the automatic model not as good?
+
+fit %>%
+  gg_arma()
+
+# this plot shows that the one I chose is close to being non-stationary
+# you can see the red dot on the boundary of the unit circle for MA; 
+# this indicates that the model is close to being non-zero which is why 
+# it is not considered by the model on its own.
+```
+
+# Q9
+```{r}
+aus_arrivals %>%
+  filter(Origin == "NZ") %>%
+  autoplot()
+```
+
+# transformation
+```{r}
+aus_arrivals %>%
+  filter(Origin =="NZ") %>%
+  autoplot(box_cox(Arrivals,1/3))
+````
+# seasonally difference the data
+```{r}
+aus_arrivals %>%
+  filter(Origin =="NZ") %>%
+  gg_tsdisplay(difference(box_cox(Arrivals,1/3), lag = 4),
+           plot_type = "partial")
+
+```
+# looks stationary, but lets test
+```{r}
+aus_arrivals %>%
+  filter(Origin =="NZ") %>%
+  features(difference(box_cox(Arrivals,1/3), lag = 4),
+           features = lst(unitroot_kpss, unitroot_ndiffs))
+```
+# stationarity
+
+```{r}
+aus_arrivals %>%
+  filter(Origin=="NZ") %>%
+  model(
+    ARIMA(box_cox(Arrivals, 1/3))
+  ) %>%
+  forecast(h="5 years") %>%
+  autoplot(aus_arrivals)
+```
+
+
+
+

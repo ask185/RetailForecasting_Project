@@ -1,0 +1,4 @@
+"0","tas_accomodation <- aus_accommodation %>%"
+"0","  filter(State == ""Tasmania"") "
+"0",""
+"0","tas_accomodation %>% autoplot(Takings)"

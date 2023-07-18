@@ -1,0 +1,5 @@
+"0","fit_arima_ets %>%"
+"0","  select(State, Industry, arima) %>%"
+"0","  augment() %>%"
+"0","  features(.innov, ljung_box, lag = 24, dof = 9)%>%"
+"0","  kable(caption = ""ljung box test for arima model"")"

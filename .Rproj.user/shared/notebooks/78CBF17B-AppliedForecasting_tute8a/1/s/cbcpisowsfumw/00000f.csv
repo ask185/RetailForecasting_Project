@@ -1,0 +1,5 @@
+"0","amazon_stock %>%"
+"0","  autoplot(difference(Close))"
+"2","Warning:"
+"2"," Removed 1 row(s) containing missing values (geom_path).
+"

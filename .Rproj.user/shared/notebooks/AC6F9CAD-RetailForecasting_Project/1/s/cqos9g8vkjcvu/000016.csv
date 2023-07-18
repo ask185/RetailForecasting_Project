@@ -1,0 +1,5 @@
+"0",""
+"0","dcmp<- myseries %>%"
+"0","  model(STL(box_cox(Turnover, lambda = 0.056)))"
+"0",""
+"0","dcmp %>% components() %>% autoplot()"

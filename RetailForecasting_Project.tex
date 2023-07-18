@@ -1,0 +1,1536 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Retail Forecasting Project},
+  pdfauthor={Aryan Sultan},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Retail Forecasting Project}
+\author{Aryan Sultan}
+\date{2022-05-04}
+
+\begin{document}
+\maketitle
+
+\hypertarget{forecasting-for-monthly-turnover-of-pharmaceutical-cosmetic-toiletry-goods}{%
+\subsection{Forecasting for Monthly turnover of Pharmaceutical, cosmetic
+\& toiletry
+goods}\label{forecasting-for-monthly-turnover-of-pharmaceutical-cosmetic-toiletry-goods}}
+
+\hypertarget{statistical-features-of-the-original-data}{%
+\subsubsection{Statistical features of the Original
+data}\label{statistical-features-of-the-original-data}}
+
+\begin{table}
+
+\caption{\label{tab:loadingData}First ten rows of Monthly turnover of Pharmaceutical, cosmetic & toiletry goods data}
+\centering
+\begin{tabular}[t]{l|l|l|l|r}
+\hline
+State & Industry & Series ID & Month & Turnover\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Apr & 43.0\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 May & 45.3\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Jun & 43.7\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Jul & 46.5\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Aug & 44.8\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Sep & 43.9\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Oct & 45.6\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Nov & 45.3\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1982 Dec & 55.0\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & A3349401C & 1983 Jan & 47.4\\
+\hline
+\end{tabular}
+\end{table}
+
+The data that I am working with is based on the Pharmaceutical, cosmetic
+and toiletry goods retailing industry in New South Wales. This time
+series data have 441 observations and 5 variables, and the \textbf{key}
+variables are: State, and Industry. Lets visualize the data using
+autoplot() function.
+
+\hypertarget{visualising-the-data}{%
+\paragraph{Visualising the data}\label{visualising-the-data}}
+
+\begin{figure}
+\centering
+\includegraphics{RetailForecasting_Project_files/figure-latex/plot1-1.pdf}
+\caption{Monthly turnover of the Pharmaceutical, cosmetic \& toiletry
+goods}
+\end{figure}
+
+The key features of the data set observed from the plot above:
+
+\begin{itemize}
+\item
+  The data has an upward trend or a positive global trend and the shape
+  of the trend can be described as linear i.e.~as the turnover
+  increases, the rate of change increases at the same proportion;
+\item
+  There are seasonal effects in the data because the peaks and troughs
+  are somewhat similar in shape and size and have a recurring pattern
+  over the course of the data;
+\item
+  There also appear to be cyclic patterns on top of the trend; there is
+  a fall somewhere between mid to late 90s, and then again somewhere
+  close to 2007-2008, perhaps due to global recession and then yet again
+  around the years between 2015-2018.
+\end{itemize}
+
+Fluctuations (variance) in the plot are much smaller at the beginning
+but become bigger as the level of series increase. The size of
+fluctuations across the series is inconsistent. We could use different
+techniques to standardize the variance; these techniques have been
+discussed later in this report.
+
+Lets look at the annual turnover of Pharmaceutical, cosmetic \& toiletry
+goods of the retailing industry.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-1-1.pdf}
+
+From the plot above it can be observed that the overall trend is moving
+in an upward direction -- a positive global trend, however, there are
+unpredictable up and down movements which indicate the existence of
+cyclic patterns in the data.
+
+\hypertarget{seasonality}{%
+\paragraph{Seasonality}\label{seasonality}}
+
+As discussed earlier, the series have seasonal patterns.
+
+Let's examine the seasonality in the data.
+
+(Chapter:2)\footnote{\url{https://otexts.com/fpp3/tspatterns.html}}
+
+\begin{itemize}
+\tightlist
+\item
+  Seasonal patterns always have a \textbf{\emph{constant length}}, and
+  emerge due to the seasonal factors such as the quarter of the year,
+  the month or day of the week.
+\item
+  The timing of peaks and troughs is predictable with seasonal data
+  because of the constant length of time between the peaks and troughs;
+  in the long term, however, the seasonality can change overtime, which
+  is the case with the data set observed above, but generally the timing
+  of the peaks and troughs is fairly predictable.
+\end{itemize}
+
+One of visualization techniques to examine seasonality in the data set
+is \texttt{gg\_season} which allows us to see data be plotted against
+the seasons in separate years.\footnote{\url{https://pkg.robjhyndman.com/forecast/reference/seasonplot.html}}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\hypertarget{explanation}{%
+\subparagraph{Explanation:}\label{explanation}}
+
+The seasonal plot shows that the maximum turnover (peak) for the data
+occurs in December and the minimum turnover (trough) for seasonality
+occurs in February. One can also observe that over time, the seasonality
+for this data set changes. We can split this data set in to four
+periods: the 80s, 90s, 2000s and post 2011 time period.
+
+During the 80s the turnover for the Pharmaceutical, cosmetic and
+toiletry goods retailing industry remains somewhat constant; there is a
+peak in December but there is not much fluctuation in seasonality across
+the data for the 80s.
+
+In the 90s the seasonal patterns begin to change. One can observe that
+turnover peaks begin to occur in March during the 90s, even though there
+is no spike in the same month during the 80s. In fact spikes in August,
+September and October are observable as well. The trough in February
+also begins to occur in the 90s. And, even though these fluctuations are
+not stable across 90s, for example, there are peaks in Augusts and
+Septembers, but also visible falls/troughs during the same months in the
+same decade, and the green lines go up and down in an unstable fashion
+in April and May. The size and shape of the fluctuations -- the seasonal
+patterns -- are certainly changing over the time, and I may call these
+variations in the seasonal patterns in 90s as the transitional period
+wherein the seasonal patterns drift away from the 80s into new
+direction.
+
+In 2000s the patterns change even further, while some of the earlier
+patterns become more pronounced, some new patterns also emerge. In the
+late 2000s (purple line) the patterns go through further transitions,
+for example there are more pronounced spikes in the months of July and
+October, which were not observed early 2000s (blue lines) and the 90s.
+In general across 2000s, one can observe troughs in the months of April,
+June, September and a global minimum in February, and spikes in the
+months of March, May and a global maximum in December.
+
+In 2010s, the patterns have become stable. There is global minimum for
+data in February and a global maximum for our data in December. Local
+peaks or maximum occur in the months of March, May and August. The local
+minimum (local troughs) occur in April, June, July, September and
+November. There is still some variation in patterns though, for example
+at the very top of the plot there is this one pink line that does not
+move in downward direction, in line with the previous years pattern,
+instead it moves upwards in steady fashion from October until December
+when it peaks.
+
+We further examine seasonality in the data using
+\texttt{gg\_subseries}.\footnote{\url{https://pkg.robjhyndman.com/forecast/reference/ggmonthplot.html}}
+(Chapter:2)\footnote{\url{https://otexts.com/fpp3/tspatterns.html}}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/plot2-1.pdf}
+One can observe that global minimum (trough) for this data set occurs in
+February and a global maximum (peak) in December. Furthermore, there are
+peaks (local maximum) in March, May, July, and August and the local
+troughs (minimum) occur in April, June, and September. Some of the
+seasonal features not very clearly observed from \texttt{gg\_season}
+plot is across four decades, the variations between September and
+November are roughly constant, although there is definitely a slight
+rise/peak in November.
+
+The next technique used to examine the data is Auto-correlation Function
+(ACF) using \texttt{ACF()} function in R. (chapter: 2)\footnote{\url{https://otexts.com/fpp3/acf.html}}
+
+\begin{table}
+
+\caption{\label{tab:ACF}Autocorrelations between first 12 lags}
+\centering
+\begin{tabular}[t]{l|l|r|r}
+\hline
+State & Industry & lag & acf\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 1M & 0.9654857\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 2M & 0.9508394\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 3M & 0.9467120\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 4M & 0.9386955\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 5M & 0.9323084\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 6M & 0.9191541\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 7M & 0.9179112\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 8M & 0.9100238\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 9M & 0.9047435\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 10M & 0.8954544\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 11M & 0.8972561\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 12M & 0.9136983\\
+\hline
+\end{tabular}
+\end{table}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/ACFplot-1.pdf}
+The three key features of the ACF plots are:
+
+\begin{itemize}
+\item
+  This data set exhibit \textbf{trend} because the auto-correlations for
+  small lags are large and positive and there is a slow decay in the
+  lags:
+\item
+  The data also have seasonality, the auto correlations are larger at
+  the seasonal lags: Since this is the monthly data, the lags 1, 12, 24
+  are linearly correlated;
+\item
+  Since the data plotted with ACF have the trend and seasonal effects,
+  the combination of these effects can be observed in the plot.
+\end{itemize}
+
+\hypertarget{should-we-transform-data-to-standardize-variance}{%
+\paragraph{Should we transform data to standardize
+variance?}\label{should-we-transform-data-to-standardize-variance}}
+
+Chapter:3\footnote{\url{https://otexts.com/fpp3/transformations.html}}
+
+Understanding the variation in the data is key to developing more robust
+statistical models for forecasting the future values.
+
+As pointed out at the beginning, the size of fluctuations vary across
+the level of series i.e.~at lower level of series the fluctuations are
+smaller but as data increases, the fluctuations become bigger. The goal
+of the transformation is to make this variance constant across the
+series. Furthermore it is important to note Time always remains the same
+that is time remains un-transformed.
+
+Lets try mathematical transformation and see what the plot looks like.
+
+\textbf{Mathematical transformations}
+
+Let's try the log-transformation for \texttt{myseries} data and observe
+what happens to the shape and size of fluctuations in the data:
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+The log-transformed fluctuations now seem quiet similar in shape and
+size. The variation has been greatly reduced here. However, box-cox
+transformation which allows for different values (between 0 and 1) for
+\(\lambda\) to be used in transformation can be tried out. Before using
+the box-cox transformation, let's find out through the \texttt{guerrero}
+method the recommended \(\lambda\) value.
+
+Here using the \texttt{guerreo} functions the Guerrero recommended
+\(\lambda\) is generated:
+
+\begin{table}
+
+\caption{\label{tab:guerrero}Guerrero recommended lambda value}
+\centering
+\begin{tabular}[t]{l|l|r}
+\hline
+State & Industry & lambda\_guerrero\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 0.0881053\\
+\hline
+\end{tabular}
+\end{table}
+
+Since the value of \(\lambda\) is close to 0, it is appropriate to just
+use the \texttt{log()} to transform the data rather then using the value
+recommended by the \texttt{guerrero} method.
+
+Transform would be particularly useful when performing Forecasts using
+the ARIMA models.
+
+\hypertarget{season-trend-decompostion-using-loess-stl-decomposition}{%
+\paragraph{Season-Trend decompostion using LOESS (STL
+Decomposition)}\label{season-trend-decompostion-using-loess-stl-decomposition}}
+
+Chapter:3\footnote{\url{https://otexts.com/fpp3/stl.html}}
+
+Decomposition is primarily used for time series analysis, and as an
+analysis tool it can be used to inform forecasting models on problems in
+data. The most common reason for time series decomposition is to
+seasonally adjust the data.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-4-2.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-4-3.pdf}
+
+The STL model is fit to the data set and saved in the \texttt{dcmp}
+variable. The output is a ``dable'' or decomposition table. The header
+to the table shows that the Turnover series has been decomposed
+additively: box\_cox(Turnover) = trend + season-year + remainder. This
+is because when we box-cox transformed our data, the STL decomposition
+model decomposed data additively.
+
+On the top panel is log transformed data (turnover), and the three
+components are shown separately in the bottom three panels and when
+combined additively these three components will produce the box-cox
+transformed data. It can be observed that the trend appears to be moving
+upwards in a linear fashion while the seasonality appears to varied
+shape and size. To fix this I have made more specification into the
+model function.
+
+In the model() function, I have decided to set the trend window to 15,
+as the window increases, it averages over more number from the data and
+produces a smoother line. There are slight highs and lows, but in my
+opinion, it captures the overall data quiet well. The trend appears to
+be linear from the above decomposition plot.
+
+In the last plot, we can see the total turnover in the given industry.
+This again shows that the trend looks linear.
+
+\hypertarget{forecasting-with-ets-model}{%
+\subsubsection{Forecasting with ETS
+model}\label{forecasting-with-ets-model}}
+
+\hypertarget{splitting-data-and-fitting-models}{%
+\paragraph{Splitting data and fitting
+models}\label{splitting-data-and-fitting-models}}
+
+Chapter:8\footnote{\url{https://otexts.com/fpp3/expsmooth.html}}
+
+The retail data I am working with have multiplicative seasonality and
+additive trend. Additive trend means that the data have a linear trend
+-- discussed earlier. Multiplicative seasonality means that the
+seasonality observed in the given data is not constant or same across
+the series; it changes as the level of series increase. Since I have
+multiplicative seasonality with additive trend, I will fit
+multiplicative models to the given series or more formally the
+\textbf{Holt-Winters multiplicative method with multiplicative errors}.
+
+In order to carry out analysis, I will fit multiple ETS models to the
+given retail data and then use accuracy measures to determine which ones
+the best. I will also include model produced by the ETS() function --
+ETS() function chooses an appropriate model by default when the function
+is applied to the given series. I will then compare the models based on
+the accuracy measures: \(AIC_c\), MASE, and RMSE.
+
+These measures can be obtained by using the \textbf{accuracy()} function
+and \textbf{glance()} functions.
+
+I will fit the following models to the data for analysis:
+
+\begin{itemize}
+\tightlist
+\item
+  ETS (M,Ad,M) model: ETS model with multiplicative errors, damped
+  additive trend, and multiplicative seasonality
+\item
+  ETS (M,A,M) model: ETS model with additive trend and multiplicative
+  seasonality
+\item
+  ETS (A,Ad,M) model: ETS model with additive errors, damped-additive
+  trend and multiplicative seasonality.
+\end{itemize}
+
+The reason I am choosing to ETS model with the damped additive trend is
+because dampening trend tends to prevent Model from over-forecasting the
+series.
+
+Before I fit multiple ETS models to the data and check them for
+accuracy, I will split series into training set, which I will use to
+make forecasts for the next four years until 2020, and a test set.
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-5}ARIMA models}
+\centering
+\begin{tabular}[t]{l|l|l|l|l|l}
+\hline
+State & Industry & ets\_auto & ets\_madm & ets\_mam & ets\_aadm\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & <ETS(M,Ad,M)> & <ETS(M,Ad,M)> & <ETS(M,A,M)> & <ETS(A,Ad,M)>\\
+\hline
+\end{tabular}
+\end{table}
+
+ETS function produces ETS(M,Ad,M) as the best fit for the series. In
+order to better understand these models and figure out which one of
+these models is more suitable for our series, lets examine these models
+using accuracy measures such as RMSE, MSE, and MASE.
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-6}Accuracy measures}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r}
+\hline
+State & Industry & .model & .type & RMSE & MASE & MAE & RMSSE & ACF1\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_auto & Training & 8.786440 & 0.3646590 & 6.142208 & 0.4096724 & 0.0131631\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_mam & Training & 8.955693 & 0.3702698 & 6.236715 & 0.4175639 & -0.0552022\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_aadm & Training & 8.508660 & 0.3569631 & 6.012581 & 0.3967208 & 0.0475289\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-7}AICc}
+\centering
+\begin{tabular}[t]{l|l|l|r|r|r}
+\hline
+State & Industry & .model & AIC & AICc & BIC\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_auto & 4190.469 & 4192.188 & 4263.065\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_mam & 4193.902 & 4195.435 & 4262.464\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets\_aadm & 4337.461 & 4339.180 & 4410.057\\
+\hline
+\end{tabular}
+\end{table}
+
+Root Mean Square Error (RMSE) shows that ETS model with \textbf{additive
+errors, damped-additive trend and multiplicative seasonality}
+outperforms other two models: it has the lowest RMSE and the lowest Mean
+Absolute Error (MASE) score among all of the models specified.
+
+However, looking at the Akaike information criterion-corrected
+(AIC\(_c\)) score, it turns out that ETS model with
+\textbf{multiplicative errors, damped-additive trend and multiplicative
+seasonality} is better among all three models.
+
+I would prefer to look at the AIC scores. This is because AIC is used to
+compare different possible models and determine which one is the best
+fit for the series. AIC uses a model's maximum likelihood estimation
+(log-likelihood) as a measure of fit. Maximum likelihood is a measure of
+how likely it is to see the observed data, given a model. The model with
+the maximum likelihood is the one that ``fits'' the series the best. AIC
+is low for models with high likelihoods -- this means the selected model
+fits the series better -- but adds a penalty term for models with higher
+parameter complexity, since more parameters means a model is more likely
+to overfit to the training data. The desired result is to find the
+lowest possible AIC, which indicates the best balance of model fit with
+generalizability.\footnote{\url{https://towardsdatascience.com/introduction-to-aic-akaike-information-criterion-9c9ba1c96ced}}
+\footnote{\url{https://otexts.com/fpp3/ets-estimation.html}}
+
+While I would prefer a model that has a minimum AIC to the model(s) that
+has better RMSE and MASE score, there is no silver bullet. I cannot
+state with certainty which is better based on just the AIC and RMSE/MASE
+score. Nevertheless, I will use these models to generate forecasts on
+training data and test their accuracy on the test set to determine which
+is one better among all three models.
+
+Lets also examine the ljung box test for these models:
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ETS(M,Ad,M) 
+##   Smoothing parameters:
+##     alpha = 0.5944558 
+##     beta  = 0.01110088 
+##     gamma = 0.0001034853 
+##     phi   = 0.9799701 
+## 
+##   Initial states:
+##      l[0]      b[0]      s[0]     s[-1]     s[-2]    s[-3]    s[-4]    s[-5]
+##  41.95522 0.5186482 0.9605474 0.8841827 0.9318839 1.225624 1.024405 1.019492
+##      s[-6]    s[-7]    s[-8]     s[-9]  s[-10]    s[-11]
+##  0.9991811 1.020878 1.007214 0.9757492 1.00018 0.9506628
+## 
+##   sigma^2:  0.0024
+## 
+##      AIC     AICc      BIC 
+## 4190.469 4192.188 4263.065
+\end{verbatim}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-8}Ljung box test for ets_M,Ad,M}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+.model & lb\_stat & lb\_pvalue\\
+\hline
+ets\_auto & 55.85705 & 0.0000003\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ETS(M,A,M) 
+##   Smoothing parameters:
+##     alpha = 0.672582 
+##     beta  = 0.04493047 
+##     gamma = 0.0001003369 
+## 
+##   Initial states:
+##      l[0]      b[0]     s[0]     s[-1]     s[-2]    s[-3]   s[-4]    s[-5]
+##  42.43689 0.2438477 0.957609 0.8835992 0.9335627 1.224285 1.02655 1.019826
+##     s[-6]    s[-7]    s[-8]    s[-9]   s[-10]    s[-11]
+##  1.001139 1.020146 1.005529 0.973856 1.000101 0.9537966
+## 
+##   sigma^2:  0.0024
+## 
+##      AIC     AICc      BIC 
+## 4193.902 4195.435 4262.464
+\end{verbatim}
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ETS(A,Ad,M) 
+##   Smoothing parameters:
+##     alpha = 0.5540057 
+##     beta  = 0.01970065 
+##     gamma = 0.0001013417 
+##     phi   = 0.9796926 
+## 
+##   Initial states:
+##      l[0]      b[0]      s[0]     s[-1]     s[-2]    s[-3]    s[-4]    s[-5]
+##  42.12401 0.4904665 0.9623912 0.8826974 0.9171911 1.215675 1.040908 1.026309
+##     s[-6]    s[-7]    s[-8]     s[-9]   s[-10]    s[-11]
+##  1.003585 1.029371 1.004887 0.9697463 1.004811 0.9424278
+## 
+##   sigma^2:  75.4742
+## 
+##      AIC     AICc      BIC 
+## 4337.461 4339.180 4410.057
+\end{verbatim}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-8}Ljung box test for ets_M,A,M}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+.model & lb\_stat & lb\_pvalue\\
+\hline
+ets\_mam & 66.43579 & 0\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-8}Ljung box test for ets_M,A,M}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+.model & lb\_stat & lb\_pvalue\\
+\hline
+ets\_aadm & 54.26053 & 0.0000005\\
+\hline
+\end{tabular}
+\end{table}
+
+The three of these models have lower than 0.05 p-value on ljung box
+test, hence we focus on the residuals autocorrelations. In order to
+decide whether or not the model with p-value less than 0.05 on the
+ljung-box test should be chosen to generate forecasts, it is important
+to look at the auto-correlations for the models; as discussed in the
+lectures what matters is the magnitude of auto-correlations, if
+auto-correlations are smaller then it does not matter. It can be seen
+from \texttt{gg\_tsresiduals}plot that most of the lags are within the
+-0.1 and 0.1 range except for one lag that goes over the 0.1 range int
+the ACF plot.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-9-2.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-9-3.pdf}
+The AC residuals look smaller within the range of -0.1 and 0.1 but
+innovation residuals do not look completely white noise for the
+ETS(A,Ad,M) model. The histogram of residuals for ETS(M,Ad,M) model
+looks left skewed. Lets also look at the parameter estimates for
+ETS(M,Ad,M) model:
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-10}Parameter estimates}
+\centering
+\begin{tabular}[t]{l|l|r}
+\hline
+.model & term & estimate\\
+\hline
+ets\_auto & alpha & 0.5944558\\
+\hline
+ets\_auto & beta & 0.0111009\\
+\hline
+ets\_auto & gamma & 0.0001035\\
+\hline
+ets\_auto & phi & 0.9799701\\
+\hline
+ets\_auto & l[0] & 41.9552233\\
+\hline
+ets\_auto & b[0] & 0.5186482\\
+\hline
+ets\_auto & s[0] & 0.9605474\\
+\hline
+ets\_auto & s[-1] & 0.8841827\\
+\hline
+ets\_auto & s[-2] & 0.9318839\\
+\hline
+ets\_auto & s[-3] & 1.2256239\\
+\hline
+ets\_auto & s[-4] & 1.0244048\\
+\hline
+ets\_auto & s[-5] & 1.0194917\\
+\hline
+ets\_auto & s[-6] & 0.9991811\\
+\hline
+ets\_auto & s[-7] & 1.0208782\\
+\hline
+ets\_auto & s[-8] & 1.0072141\\
+\hline
+ets\_auto & s[-9] & 0.9757492\\
+\hline
+ets\_auto & s[-10] & 1.0001803\\
+\hline
+ets\_auto & s[-11] & 0.9506628\\
+\hline
+\end{tabular}
+\end{table}
+
+Having discussed the specified models and the model produced by the ETS,
+lets produce forecasts on training data with these models for the next
+four years i.e.~2016-2020.
+
+\hypertarget{forcasting-with-the-ets-models}{%
+\paragraph{Forcasting with the ETS
+models}\label{forcasting-with-the-ets-models}}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-11-1.pdf}
+We can observe from the plot that \texttt{ets\_auto} ETS(M,Ad,M) model
+is closer --almost identical-- to the \texttt{ets\_aadm} ETS(A,Ad,M)
+method. Why is this? This is because the errors component does not have
+a significant impact on the forecasts, and also both these models have
+additive trend -- trend component affects the forecasts significantly --
+hence we see that ETS(M,Ad,M) and ETS(A,Ad,M) are closer in terms of
+their forecasts. Generally, all three models have captured the
+seasonality and trend well, however, we can see that ETS(M,A,M) models
+forecasts slightly higher Turnover than other two models.
+
+We can further look at the fitted values from \texttt{ets\_auto}
+ETS(M,Ad,M) and ETS(A,Ad,M) methods against the actual values.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-12-1.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-12-2.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-12-3.pdf}
+
+\hypertarget{test-set-and-evaluating-accuracy-of-models}{%
+\paragraph{Test set and evaluating accuracy of
+models}\label{test-set-and-evaluating-accuracy-of-models}}
+
+Now lets apply this data to the test set. Applying this model to the
+test allows us to see how well does the model perform on the test set --
+the part of the series it has not seen. The main reason we do this is to
+check if the model overfits the training data. If it does then clearly
+the model is not enough to generate prediction on set on observation it
+has not seen yet, although we know from AICc score that the ETS(M,Ad,M)
+model \texttt{ets\_auto} model will be good for prediction than other
+models specified earlier.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-13}Accuracy measures}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r|r}
+\hline
+.model & State & Industry & .type & ME & RMSE & MAE & MPE & MAPE & MASE\\
+\hline
+ets\_aadm & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & 10.618487 & 15.92519 & 12.70610 & 2.710037 & 3.275978 & 0.7543531\\
+\hline
+ets\_auto & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & 11.114437 & 17.45594 & 14.08452 & 2.813935 & 3.637057 & 0.8361891\\
+\hline
+ets\_mam & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & 6.715956 & 15.00023 & 12.08072 & 1.677558 & 3.129250 & 0.7172250\\
+\hline
+\end{tabular}
+\end{table}
+
+On the test set, ETS(M,A,M) method does much better than other models.
+The RMSE, MASE, MAE and MAPE scores for the ETS(M,A,M) model are
+actually the lowest among the three models. In the next I analyse the
+ARIMA models and then compare the ETS model with the best ARIMA model to
+see which one is more suitable.
+
+\hypertarget{arima-models}{%
+\subsubsection{ARIMA models}\label{arima-models}}
+
+\hypertarget{creating-stationary-series}{%
+\paragraph{Creating stationary
+series}\label{creating-stationary-series}}
+
+As discussed earlier in the report, this series have:
+
+\begin{itemize}
+\tightlist
+\item
+  Trend
+\item
+  Seasonality
+\item
+  Variance
+\end{itemize}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+In order to use ARIMA model to make forecasts, the data would need to be
+stationary -- the series would not exhibit any trend and seasonality and
+have constant variance with no predictable patterns in the
+long-term.\footnote{\url{https://otexts.com/fpp3/stationarity.html}}
+This means that I would have to transform the data to remove variance
+and then make it stationary by stabilizing the mean of the series.
+
+The steps to make the time series stationary:
+
+1 - Transform the series -- remove the variance from the data. 2 -
+Difference the series a - seasonal difference b - regular difference
+(non-seasonal data)
+
+The reason we do the seasonal difference first is because it might also
+remove the trend, it depends on how much there is through out the year.
+We difference the data to remove the unit root process -- the trend that
+is NOT really a trend.
+
+\hypertarget{step-1-transformaing-the-series}{%
+\paragraph{Step-1: Transformaing the
+series}\label{step-1-transformaing-the-series}}
+
+Let's transform the series, using the \(lambda\) value as recommended by
+the \texttt{guerrero} function, which is 0.056. I could also use log
+since the given value of \(lambda\) is close to zero.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+Given that I have removed the variance from series, in the next step I
+will difference the series, that is I will take the difference of the
+consecutive observations; \textbf{differenced series is the change
+between each observation in the original series}. This gives us a
+\textbf{stabilized mean} which then allows us to fit ARIMA models to the
+stationary-series. Sometimes the series may require second-order
+difference as well. However, in case of seasonal difference: the
+differences is the change between one seasonal period to the next.
+
+\hypertarget{step-2-difference-the-series}{%
+\paragraph{Step-2: Difference the
+series}\label{step-2-difference-the-series}}
+
+In this step I seasonally difference the series first, and then decide
+whether or not to take the second difference of the series. In order to
+do that I will examine the ACF and PACF plots of the
+\textbf{differenced} series, and run tests such as KPSS test, and
+\texttt{unitroot\_ndiff} on the seasonally \textbf{difference-d} series.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+In the ACF plot, I can see that the ACF decays in a sine-wave manner
+(sinusoidal) while in the PACF, lags decay exponentially. And while the
+first lag in PACF is large and significant and the second lag is
+marginally significant,the rest of the lags are insignificant. Lag 12
+and 24 in PACF are the seasonal lags and are significant, while lag 13
+and 25 are the non-seasonal significant lags. Also, I note that lag 16
+is marginally significant in PACF. In the ACF plot, lags 1 to 9 are
+significant but decaying and lag 12 is just slightly significant; lag 16
+onward the lags become more significant. In ACF plot, lags are following
+a sine-wave pattern. Looking at the innovation residuals I observe some
+variance, which indicates that may be second order difference would be
+required. But lets use \texttt{unitroot\_ndiff} to check if second order
+differencing (regular difference) is required.
+
+Please note that both that these functions are applied to the seasonally
+differenced series!
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-17}KPSS and unit root ndiff tests}
+\centering
+\begin{tabular}[t]{l|l|r|r|r}
+\hline
+State & Industry & unitroot\_kpss\_kpss\_stat & unitroot\_kpss\_kpss\_pvalue & unitroot\_ndiffs\_ndiffs\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & 0.1871834 & 0.1 & 0\\
+\hline
+\end{tabular}
+\end{table}
+
+The \texttt{unitroot\_ndiff} show that there is no need to further
+difference the series. And KPSS test p-value is greater than 0.05, hence
+we fail to reject the null hypothesis -- null hypothesis is that the
+series is stationary.
+
+\hypertarget{finding-appropriate-arima-models}{%
+\paragraph{Finding Appropriate ARIMA
+models:}\label{finding-appropriate-arima-models}}
+
+Here, my goal is to find an appropriate ARIMA model based on the ACF and
+PACF plots as seen above.
+
+The significant spikes at lag 1 \& 2 in the PACF suggests a non-seasonal
+AR(2) component, although I can also include lag 15 which is quiet
+significant, usually, however, we ignore the lags after the first
+seasonal lag even if they are significant. The significant spike at lag
+12 \& 24 in the PACF suggests a seasonal AR(2) component. Consequently,
+I can begin with an ARIMA(2,0,0)(2,1,0) model, indicating a seasonal
+difference (D=1), and non-seasonal AR(p=2) and seasonal AR(P=2)
+component.
+
+If I choose to begin with the ACF, I may select an ARIMA(0,0,9)(0,1,2)
+model, because lags1 to 9 are significant non-seasonal lags suggesting
+an MA(q=9) component; a seasonal difference (D=1), and the seasonally
+significant lags at 12 and 24 indicate a seasonal MA(Q=2) component.
+
+It is usually difficult to see the interactions between the AR and MA
+components of ARMA. Usually when we choose a model we either look at the
+MA component solely or AR component solely. If we consider only the MA
+component, we immediately discount the AR component. That is to say that
+we do not consider any lags from the PACF to be interpretable, and
+exclude the AR components by putting ``p'' and ``P'' equal to 0 in our
+model. Hence, the ARIMA model we choose becomes
+ARIMA(p=0,d,q)(P=0,D,Q){[}m{]}. However, this is not to say that we can
+never specify any combination of the AR and MA components in our model.
+In fact I will specify ARIMA(2,0,0)(0,1,1) model. The point I want to
+make here is that usually it is difficult to fully assess the extent of
+interaction between AR and MA components by looking at just the ACF and
+PACF plots.
+
+I suggest ARIMA(2,0,0)(0,1,1) model by considering the two non-seasonal
+significant lags from the PACF, AR(p=2), 1 significant seasonal lag from
+ACF, MA(Q=1), and a seasonal difference (D=1).
+
+I also suggest an ARIMA(2,0,1)(2,1,1): I consider the two non-seasonal
+lags, AR(p=2), and two seasonal lags, AR(P=2), from PACF; I also
+consider 1 non-seasonal significant lag from the ACF, MA(q=1), and one
+seasonal lags, MA(Q=1), and a seasonal difference.
+
+I will also include ARIMA(0,0,7)(2,1,0): I consider seven non-seasonal
+lags (AC's with the value above 0.3) from ACF, MA(q=7), and 2 seasonal
+lags from the PACF, AR(P=2), and a seasonal difference, D=1.
+
+I will also include an automatically selected ARIMA model:
+\texttt{auto\_arima} and \texttt{arima\_Best}; for the latter I will set
+some constraints as specified in the model in the below code chunk.
+
+\textbf{Please note that in all of the manually specified models the
+series have been difference-d seasonally that is D=1 and d=0 -- no
+regular differencing.}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-18}ARIMA models}
+\centering
+\begin{tabular}[t]{l|l|l|l|l|l|l|l}
+\hline
+State & Industry & auto\_arima & arima200210 & arima009012 & arima200011 & arima201211 & arima007210\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & <ARIMA(1,0,0)(1,1,0)[12] w/ drift> & <ARIMA(2,0,0)(2,1,0)[12] w/ drift> & <ARIMA(0,0,9)(0,1,2)[12] w/ drift> & <ARIMA(2,0,0)(0,1,1)[12] w/ drift> & <ARIMA(2,0,1)(2,1,1)[12] w/ drift> & <ARIMA(0,0,7)(2,1,0)[12] w/ drift>\\
+\hline
+\end{tabular}
+\end{table}
+
+The ARIMA model automatically produced by the function is
+ARIMA(1,0,0)(1,1,0){[}12{]}) with drift. With drift model implies that
+the model has a constant term. The automatically produced model
+considers 1 non-seasonal PACF lag i.e.~AR(p=1), and 1 seasonal lags from
+PACF i.e.~AR(P=1), a seasonal difference i.e.~D=1, and none from the
+ACF, therefore MA component is not considered by the
+\texttt{auto\_arima} model.
+
+We can use to AIC\(_c\) to compare all the models using the
+\texttt{glance()} function from the fabletools package.
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-19}AIC scores from ARIMA models}
+\centering
+\begin{tabular}[t]{l|l|l|r|r|r}
+\hline
+State & Industry & .model & AIC & AICc & BIC\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & -1049.8552 & -1049.4916 & -1017.8241\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima200011 & -1041.3461 & -1041.1957 & -1021.3266\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima009012 & -1014.8158 & -1013.8849 & -962.7653\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima200210 & -960.2942 & -960.0832 & -936.2709\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima007210 & -922.1520 & -921.4803 & -878.1093\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & auto\_arima & -898.8853 & -898.7853 & -882.8697\\
+\hline
+\end{tabular}
+\end{table}
+
+Lets focus on the AIC\(_c\) score of all the models. Please note that
+all of the specified models have been differenced seasonally i.e.~D= 1
+and there is no regular differencing of the series i.e.~d=0, also the
+automatically produced model has a seasonal difference and \textbf{no}
+regular difference. Hence, I can compare models including the
+automatically produced model based on their AIC\(_C\) scores.
+
+We focus on the model with the minimum AIC\(_c\) score -- the reasons
+for doing this have been discussed earlier in the previous section. The
+automatically produced model i.e.~ARIMA(1,0,0)(1,1,0) is worst
+performing model among all six models. The best performing model is
+ARIMA(2,0,1)(2,1,1), which is some combination of the AR and MA
+components. The second best performing model is ARIMA(2,0,0)(0,1,1)
+model. Each of these `best' models consider interaction between AR and
+MA components.
+
+lets look at the automatic ARIMA(2,0,1)(2,1,1) model residuals using
+\texttt{gg\_tsresiduals()} to check if the residuals are white noise.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-20-1.pdf}
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ARIMA(2,0,1)(2,1,1)[12] w/ drift 
+## Transformation: box_cox(Turnover, lambda = 0.056) 
+## 
+## Coefficients:
+##          ar1      ar2      ma1    sar1     sar2     sma1  constant
+##       1.1136  -0.1437  -0.4481  0.0258  -0.1313  -0.8738    0.0026
+## s.e.  0.1358   0.1273   0.1206  0.0608   0.0580   0.0447    0.0003
+## 
+## sigma^2 estimated as 0.004084:  log likelihood=532.93
+## AIC=-1049.86   AICc=-1049.49   BIC=-1017.82
+\end{verbatim}
+
+\begin{table}
+\centering
+\begin{tabular}{l|r|r}
+\hline
+.model & lb\_stat & lb\_pvalue\\
+\hline
+arima201211 & 48.78894 & 0.000065\\
+\hline
+\end{tabular}
+\end{table}
+
+The ACF of the residuals for ARIMA(2,0,1)(2,1,1) looks like white noise
+and the histogram has a symmetric shape although a bit skewed to the
+left. For the most part lags in the ACF residuals plot are within the
+blue lines -- Lags 16,20,22 and 23 are significant in this plot. The
+innovation residuals for this model also look white noise; there seems
+some variance here, though not every significant.
+
+Although looking at the p-value from the ljung-box test, it appears that
+the chosen model is not the best performing model. I can get R to search
+rigorously for a better model by setting some constraints, as done in
+the code chuck below, and then use ljung box test to assess if this new
+model performs better than the ARIMA(2,0,1)(2,1,1).
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-22}Best ARIMA model}
+\centering
+\begin{tabular}[t]{l|l|l}
+\hline
+State & Industry & arima\_best\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & <ARIMA(2,0,2)(2,1,2)[12] w/ drift>\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{l|l|l|r|r}
+\hline
+State & Industry & .model & AIC & AICc\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & -1055.88 & -1055.321\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ARIMA(2,0,2)(2,1,2)[12] w/ drift 
+## Transformation: box_cox(Turnover, lambda = 0.056) 
+## 
+## Coefficients:
+##          ar1     ar2     ma1      ma2    sar1     sar2     sma1    sma2
+##       0.1108  0.8259  0.5801  -0.3348  0.3919  -0.1855  -1.2345  0.3602
+## s.e.  0.0653  0.0594  0.0761   0.0507  0.1939   0.0644   0.1920  0.1769
+##       constant
+##         0.0040
+## s.e.    0.0005
+## 
+## sigma^2 estimated as 0.004013:  log likelihood=537.94
+## AIC=-1055.88   AICc=-1055.32   BIC=-1015.84
+\end{verbatim}
+
+\begin{table}
+\centering
+\begin{tabular}{l|l|l|r|r}
+\hline
+State & Industry & .model & lb\_stat & lb\_pvalue\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 33.53835 & 0.0039515\\
+\hline
+\end{tabular}
+\end{table}
+
+R returns the model ARIMA(2,0,2)(2,1,2) after taking a bit of time
+generating it. Running the ljung box test, I see that the p-value for
+this model is still less than 0.05, it is 0.0039, although it is higher
+than the p-value for ARIMA(2,0,1)(2,1,1) model, which was 0.000065.
+There is not much difference in the AIC\(_c\) values between these
+models, but the p-value from the ljung box test is better for this model
+than the ones specified above including the ets\_auto model
+ARIMA(1,0,0)(1,1,0).
+
+Lets look at the residuals for this model:
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-24-1.pdf}
+
+In order to decide whether or not the model with p-value less than 0.05
+on the ljung-box test should be chosen to generate forecasts, it is
+important to look at the auto-correlations for the model: as discussed
+in the lectures what matters is the magnitude of auto-correlations, if
+auto-correlations are smaller then it does not matter. It can be seen
+from \texttt{gg\_tsresiduals}plot for the ARIMA(2,0,2)(2,1,2) model that
+most of the lags are within the -0.1 and 0.1 range except for one lag
+that goes over the 0.1 range. Using the augment function, I can extract
+the regular residuals and innovation residuals for the
+ARIMA(2,0,2)(2,1,2) model.
+
+\begin{table}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r}
+\hline
+State & Industry & .model & Month & Turnover & .fitted & .resid & .innov\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Apr & 43.0 & 42.85717 & 0.1428298 & 0.0041068\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 May & 45.3 & 45.14762 & 0.1523808 & 0.0041712\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Jun & 43.7 & 43.55427 & 0.1457260 & 0.0041267\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Jul & 46.5 & 46.34260 & 0.1573989 & 0.0042036\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Aug & 44.8 & 44.64970 & 0.1502952 & 0.0041575\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Sep & 43.9 & 43.75345 & 0.1465542 & 0.0041323\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Oct & 45.6 & 45.44637 & 0.1536313 & 0.0041793\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Nov & 45.3 & 45.14762 & 0.1523785 & 0.0041712\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1982 Dec & 55.0 & 54.80641 & 0.1935900 & 0.0044127\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 1983 Jan & 47.4 & 47.23882 & 0.1611770 & 0.0042273\\
+\hline
+\end{tabular}
+\end{table}
+
+\hypertarget{generating-forecasts}{%
+\paragraph{Generating forecasts}\label{generating-forecasts}}
+
+Taking in to account the AIC\(_c\), the ljung-box test p-value and the
+residuals ACF plot, It appears to me that the ARIMA(2,0,2)(2,1,2) model
+is actually better than the ARIMA(2,0,1)(2,1,1) model from above.
+Nevertheless I will use both these models to generate forecasts:
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-26-1.pdf}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-26}First ten rows of the forecasts from the ARIMA(202)(212)[12]}
+\centering
+\begin{tabular}[t]{l|l|l|l|l|r}
+\hline
+State & Industry & .model & Month & Turnover & .mean\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Jan & t(N(6.9, 0.004)) & 335.9417\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Feb & t(N(6.9, 0.0059)) & 332.0837\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Mar & t(N(7, 0.0072)) & 365.0895\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Apr & t(N(7, 0.0088)) & 363.5718\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 May & t(N(7.1, 0.01)) & 387.7378\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Jun & t(N(7, 0.011)) & 376.0735\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Jul & t(N(7.1, 0.012)) & 391.9343\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Aug & t(N(7.1, 0.014)) & 406.9800\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Sep & t(N(7.1, 0.014)) & 395.8179\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima\_best & 2017 Oct & t(N(7.1, 0.015)) & 408.9374\\
+\hline
+\end{tabular}
+\end{table}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-26-2.pdf}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-26}First ten rows of the forecasts from the ARIMA(201)(211)[12]}
+\centering
+\begin{tabular}[t]{l|l|l|l|l|r}
+\hline
+State & Industry & .model & Month & Turnover & .mean\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Jan & t(N(6.9, 0.0041)) & 340.2543\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Feb & t(N(6.9, 0.0059)) & 332.3295\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Mar & t(N(7, 0.0073)) & 366.0415\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Apr & t(N(7, 0.0087)) & 364.2084\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 May & t(N(7.1, 0.0099)) & 388.4633\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Jun & t(N(7, 0.011)) & 375.6493\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Jul & t(N(7.1, 0.012)) & 393.7658\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Aug & t(N(7.1, 0.013)) & 406.0282\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Sep & t(N(7.1, 0.014)) & 397.3397\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima201211 & 2017 Oct & t(N(7.1, 0.015)) & 407.4804\\
+\hline
+\end{tabular}
+\end{table}
+
+Both these models seem to have captured the seasonality and trend in the
+series really well. As per my opinion, the models have made forecast
+quiet well.
+
+In the above plot we can see the model does pretty well on the training
+data. It can be observed from the plot that the red line (forecast from
+the auto\_arima) is almost the same as the actual training data.
+
+\hypertarget{evaluating-accuracy}{%
+\paragraph{Evaluating accuracy}\label{evaluating-accuracy}}
+
+Now lets apply this data to the test set. Applying this model to the
+test allows us to see how well does the model perform on the test set --
+the part of the series it has not seen. The main reason we do this is to
+check if the model overfits the training data. If it does then clearly
+the model is not enough to generate prediction on set on observation it
+has not seen yet.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-27-1.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-27-2.pdf}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-27}Accuracy measures for ARIMA(2,0,1)(2,1,1)[12]}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r|r|r|r}
+\hline
+.model & State & Industry & .type & ME & RMSE & MAE & MPE & MAPE & MASE & RMSSE & ACF1\\
+\hline
+arima201211 & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & -26.93451 & 33.52256 & 28.47167 & -7.019139 & 7.422884 & 1.690345 & 1.563007 & 0.6050296\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-27}Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r|r|r|r}
+\hline
+.model & State & Industry & .type & ME & RMSE & MAE & MPE & MAPE & MASE & RMSSE & ACF1\\
+\hline
+arima\_best & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & -26.80333 & 33.58492 & 28.44493 & -6.978717 & 7.409487 & 1.688757 & 1.565915 & 0.6378636\\
+\hline
+\end{tabular}
+\end{table}
+
+On the test set, ARIMA(2,0,2)(2,1,2) method performs better by a very
+small margin than ARIMA(2,0,1)(2,1,1) model. The RMSE score for both
+these models is the same. The MASE score for the ARIMA(2,0,1)(2,1,1) is
+1.69 while MASE for the ARIMA(2,0,2)(2,1,2) is 1.68. The models pretty
+much the same on test set. I will choose ARIMA(2,0,2)(2,1,2) model to
+compare with the ETS(M,A,M) model.
+
+\hypertarget{ets-v-arima-and-final-assessment}{%
+\subsubsection{ETS V ARIMA and Final
+assessment}\label{ets-v-arima-and-final-assessment}}
+
+\hypertarget{performance-on-the-training-data}{%
+\paragraph{Performance on the training
+data}\label{performance-on-the-training-data}}
+
+The ETS model chosen from my analysis of the series was ETS model was
+ETS(M,Ad,M) model. Lets run some accuracy tests on this ETS model:
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-28}Accuracy measures for ETS(M,A,M)}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r|r}
+\hline
+.model & State & Industry & .type & ME & RMSE & MAE & MPE & MAPE & MASE\\
+\hline
+ets\_mam & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & 6.715956 & 15.00023 & 12.08072 & 1.677558 & 3.12925 & 0.717225\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-28}Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]}
+\centering
+\begin{tabular}[t]{l|l|l|l|r|r|r|r|r|r|r|r}
+\hline
+.model & State & Industry & .type & ME & RMSE & MAE & MPE & MAPE & MASE & RMSSE & ACF1\\
+\hline
+arima\_best & New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & Test & -26.80333 & 33.58492 & 28.44493 & -6.978717 & 7.409487 & 1.688757 & 1.565915 & 0.6378636\\
+\hline
+\end{tabular}
+\end{table}
+
+On the accuracy test, ETS(M,A,M) method has lower RMSE and MASE than
+ARIMA(2,0,2)(2,1,2). In fact the difference in RMSE, MAE and MAPE are
+much greater between these two models. The ETS(M,A,M) appears to
+outperform the ARIMA(2,0,2)(2,1,1) model.
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-29-1.pdf}
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-29-2.pdf}
+
+The ACF residuals for ARIMA(2,0,2)(2,1,2) has most lags within the
+significance level -- below the blue line. The histogram of residuals
+also look symmetric and the innovation residuals are centered around
+zero and there is almost no variance -- white noise.In contrast the
+ETS(M,A,M) model has a few lags that go beyond the significance level
+and residual histogram is not as symmetric as for the ARIMA model. The
+innovation residuals look white noise. Nevertheless we can see that
+seasonality in the ETS and ARIMA models have been removed. The seasonal
+lags in ACF plots for both these models are insignificant.
+
+On the ljung box test both these models have lower than 0.05 p-value,
+hence we focus more on the residuals auto correlations. As discussed
+above the residuals auto-correlation are small; the value for most lags
+range between -0.1 and 0.1 or slightly above this range. I could argue
+that although these models are not perfect and they perform better among
+other specified models. I can look at the accuracy measures on the test
+to assess whether or not the model performs well.
+
+\hypertarget{performance-on-full-data}{%
+\paragraph{Performance on full data}\label{performance-on-full-data}}
+
+Lets have these models generate forecasts on full data set.
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ARIMA(2,0,2)(2,1,2)[12] w/ drift 
+## Transformation: box_cox(Turnover, lambda = 0.056) 
+## 
+## Coefficients:
+##          ar1     ar2     ma1      ma2    sar1     sar2     sma1    sma2
+##       0.1270  0.8185  0.5572  -0.3385  0.4176  -0.2010  -1.2619  0.3944
+## s.e.  0.0709  0.0657  0.0792   0.0482  0.1745   0.0604   0.1722  0.1554
+##       constant
+##         0.0033
+## s.e.    0.0005
+## 
+## sigma^2 estimated as 0.003903:  log likelihood=576.26
+## AIC=-1132.51   AICc=-1131.99   BIC=-1091.9
+\end{verbatim}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-31-1.pdf}
+
+\begin{verbatim}
+## [[1]]
+## 
+## $title
+## [1] "residuals from arima"
+## 
+## attr(,"class")
+## [1] "labels"
+\end{verbatim}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-31}ljung box test for arima model}
+\centering
+\begin{tabular}[t]{l|l|l|r|r}
+\hline
+State & Industry & .model & lb\_stat & lb\_pvalue\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & arima & 35.4399 & 0.0021279\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{verbatim}
+## Series: Turnover 
+## Model: ETS(A,Ad,M) 
+##   Smoothing parameters:
+##     alpha = 0.6147529 
+##     beta  = 0.01182627 
+##     gamma = 0.0001896439 
+##     phi   = 0.9799131 
+## 
+##   Initial states:
+##      l[0]      b[0]     s[0]     s[-1]    s[-2]    s[-3]    s[-4]    s[-5]
+##  41.92504 0.7395322 0.965246 0.8836055 0.911081 1.207987 1.042218 1.020704
+##     s[-6]   s[-7]    s[-8]     s[-9]   s[-10]    s[-11]
+##  1.004637 1.03704 1.007109 0.9727776 1.005084 0.9425127
+## 
+##   sigma^2:  79.4081
+## 
+##      AIC     AICc      BIC 
+## 4633.131 4634.752 4706.734
+\end{verbatim}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-31-2.pdf}
+
+\begin{verbatim}
+## [[1]]
+## 
+## $title
+## [1] "residuals from ets"
+## 
+## attr(,"class")
+## [1] "labels"
+\end{verbatim}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-31}ljung box test for ets model}
+\centering
+\begin{tabular}[t]{l|l|l|r|r}
+\hline
+State & Industry & .model & lb\_stat & lb\_pvalue\\
+\hline
+New South Wales & Pharmaceutical, cosmetic and toiletry goods retailing & ets & 71.57835 & 0\\
+\hline
+\end{tabular}
+\end{table}
+
+The innovation residuals from the arima model appear white noise, while
+the innovation residuals from the ets model tends to show variance. The
+ACF plot shows that for most part the lags for arima are within the
+significance level, while a few lags for ets model ACF residuals plot
+tend to go beyond the significance level. The shape of histogram of
+residuals is symmetric for both these models.
+
+\hypertarget{forecasts-and-prediction-intervals}{%
+\paragraph{Forecasts and prediction
+intervals}\label{forecasts-and-prediction-intervals}}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-32-1.pdf}
+
+\begin{verbatim}
+## # A tsibble: 48 x 7 [1M]
+## # Key:       State, Industry, .model [1]
+##    State       Indus~1 .model    Month     Turnover .mean                  `80%`
+##    <chr>       <chr>   <chr>     <mth>       <dist> <dbl>                 <hilo>
+##  1 New South ~ Pharma~ ets    2019 Jan sample[5000]  351. [339.2355, 362.2139]80
+##  2 New South ~ Pharma~ ets    2019 Feb sample[5000]  340. [326.4931, 353.4332]80
+##  3 New South ~ Pharma~ ets    2019 Mar sample[5000]  372. [355.7514, 387.9312]80
+##  4 New South ~ Pharma~ ets    2019 Apr sample[5000]  363. [346.1825, 380.6590]80
+##  5 New South ~ Pharma~ ets    2019 May sample[5000]  388. [367.9622, 407.6084]80
+##  6 New South ~ Pharma~ ets    2019 Jun sample[5000]  376. [355.3350, 395.8695]80
+##  7 New South ~ Pharma~ ets    2019 Jul sample[5000]  389. [366.2425, 411.7402]80
+##  8 New South ~ Pharma~ ets    2019 Aug sample[5000]  401. [376.6807, 425.3858]80
+##  9 New South ~ Pharma~ ets    2019 Sep sample[5000]  389. [363.1576, 414.2562]80
+## 10 New South ~ Pharma~ ets    2019 Oct sample[5000]  395. [368.2185, 422.6858]80
+## # ... with 38 more rows, and abbreviated variable name 1: Industry
+\end{verbatim}
+
+\hypertarget{ets-model}{%
+\paragraph{ETS Model}\label{ets-model}}
+
+\includegraphics{RetailForecasting_Project_files/figure-latex/unnamed-chunk-33-1.pdf}
+
+\begin{verbatim}
+## # A tsibble: 48 x 7 [1M]
+## # Key:       State, Industry, .model [1]
+##    State  Indus~1 .model    Month          Turnover .mean                  `80%`
+##    <chr>  <chr>   <chr>     <mth>            <dist> <dbl>                 <hilo>
+##  1 New S~ Pharma~ arima  2019 Jan   t(N(7, 0.0039))  357. [337.0879, 378.2525]80
+##  2 New S~ Pharma~ arima  2019 Feb t(N(6.9, 0.0057))  351. [326.4073, 375.3697]80
+##  3 New S~ Pharma~ arima  2019 Mar  t(N(7.1, 0.007))  381. [352.5945, 411.1265]80
+##  4 New S~ Pharma~ arima  2019 Apr   t(N(7, 0.0085))  375. [343.8743, 407.6055]80
+##  5 New S~ Pharma~ arima  2019 May t(N(7.1, 0.0097))  403. [367.5563, 440.2377]80
+##  6 New S~ Pharma~ arima  2019 Jun  t(N(7.1, 0.011))  394. [356.9511, 432.8406]80
+##  7 New S~ Pharma~ arima  2019 Jul  t(N(7.2, 0.012))  410. [369.8915, 452.3849]80
+##  8 New S~ Pharma~ arima  2019 Aug  t(N(7.2, 0.013))  429. [384.9947, 475.0844]80
+##  9 New S~ Pharma~ arima  2019 Sep  t(N(7.2, 0.014))  416. [371.6438, 462.2160]80
+## 10 New S~ Pharma~ arima  2019 Oct  t(N(7.2, 0.015))  429. [381.6287, 478.0965]80
+## # ... with 38 more rows, and abbreviated variable name 1: Industry
+\end{verbatim}
+
+\hypertarget{comparing-with-the-abs-data}{%
+\paragraph{Comparing with the ABS
+data}\label{comparing-with-the-abs-data}}
+
+\begin{verbatim}
+## # A tsibble: 494 x 13 [1D]
+## # Key:       Industry [1]
+##    table_no sheet_no table_~1 date       Indus~2 Turno~3 serie~4 data_~5 colle~6
+##    <chr>    <chr>    <chr>    <date>     <chr>     <dbl> <chr>   <chr>   <chr>  
+##  1 8501011  Data1    TABLE 1~ 1982-04-01 Turnov~    43   Origin~ FLOW    1      
+##  2 8501011  Data1    TABLE 1~ 1982-05-01 Turnov~    45.3 Origin~ FLOW    1      
+##  3 8501011  Data1    TABLE 1~ 1982-06-01 Turnov~    43.7 Origin~ FLOW    1      
+##  4 8501011  Data1    TABLE 1~ 1982-07-01 Turnov~    46.5 Origin~ FLOW    1      
+##  5 8501011  Data1    TABLE 1~ 1982-08-01 Turnov~    44.8 Origin~ FLOW    1      
+##  6 8501011  Data1    TABLE 1~ 1982-09-01 Turnov~    43.9 Origin~ FLOW    1      
+##  7 8501011  Data1    TABLE 1~ 1982-10-01 Turnov~    45.6 Origin~ FLOW    1      
+##  8 8501011  Data1    TABLE 1~ 1982-11-01 Turnov~    45.3 Origin~ FLOW    1      
+##  9 8501011  Data1    TABLE 1~ 1982-12-01 Turnov~    55   Origin~ FLOW    1      
+## 10 8501011  Data1    TABLE 1~ 1983-01-01 Turnov~    47.4 Origin~ FLOW    1      
+## # ... with 484 more rows, 4 more variables: frequency <chr>, series_id <chr>,
+## #   unit <chr>, Month <mth>, and abbreviated variable names 1: table_title,
+## #   2: Industry, 3: Turnover, 4: series_type, 5: data_type, 6: collection_month
+\end{verbatim}
+
+\hypertarget{final-conclusiom}{%
+\paragraph{Final Conclusiom}\label{final-conclusiom}}
+
+Based on the accuracy measures on the training and the complete myseries
+data set, I can draw the conclusion that ARIMA model performs better
+than ETS model.
+
+\hypertarget{key-benefits-and-limitations}{%
+\paragraph{Key benefits and
+limitations}\label{key-benefits-and-limitations}}
+
+The key benefits of the both arima and ets models is that they have
+captured seasonality and trend really well in the data, although I
+believe that my data set had strong cyclic patterns that had been not
+been fully captured. This is the limitation that these models had in my
+opinion.
+
+\end{document}

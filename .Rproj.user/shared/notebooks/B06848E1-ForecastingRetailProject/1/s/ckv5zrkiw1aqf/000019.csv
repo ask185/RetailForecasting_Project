@@ -1,0 +1,6 @@
+"0",""
+"0",""
+"0","arima_forecasts %>%"
+"0","  autoplot(tail(myseries_test, 12*4)) + "
+"0","  theme_bw() +"
+"0","  labs(title = ""2 years Forecasts from ARIMA model"", y =""millions $"")"

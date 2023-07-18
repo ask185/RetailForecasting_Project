@@ -1,0 +1,143 @@
+---
+title: "Forecasting-Retail Project"
+author: "Aryan Sultan"
+date: '2022-05-16'
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(fpp3)
+library(tidyverse)
+library(fable)
+library(kableExtra)
+```
+
+```{r}
+# Use your student ID as the seed
+set.seed(31245307)
+myseries <- aus_retail %>%
+  # Remove discontinued series
+  filter(!(`Series ID` %in% c("A3349561R","A3349883F","A3349499L","A3349902A",
+                        "A3349588R","A3349763L","A3349372C","A3349450X",
+                        "A3349679W","A3349378T","A3349767W","A3349451A"))) %>%
+  # Select a series at random
+  filter(`Series ID` == sample(`Series ID`,1))
+
+abs_data <- readabs::read_abs(series_id="A3349401C")
+```
+
+
+### A discussion of the statistical features of the original data.
+
+### Explanation of transformations and differencing used. 
+
+### Comparison of the chosen ETS and ARIMA model
+
+#### Performance on the training data
+
+The ETS model chosen from my analysis of the series was ETS model was ETS(M,Ad,M) model. Lets run some accuracy tests on this ETS model:
+
+```{r}
+ets_mam <- ets_forecasts %>%
+  filter(.model %in% "ets_mam")
+
+
+accuracy(ets_mam, myseries) %>%
+  select(.model:MASE) %>%
+   kbl(caption = "Accuracy measures for ETS(M,A,M)") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+accuracy(arima202212_forecasts, myseries) %>%
+   kbl(caption = "Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+On the accuracy test, ETS(M,A,M) method has lower RMSE and MASE than ARIMA(2,0,2)(2,1,2). In fact the difference in RMSE, MAE and MAPE are much greater between these two models. The ETS(M,A,M) appears to outperform the ARIMA(2,0,2)(2,1,1) model. 
+
+```{r}
+fit_ets %>%
+  select(State,Industry,ets_mam) %>%
+  gg_tsresiduals()+
+  labs(title = "Residuals plot for the ETS(M,A,M) model")
+
+arima202212 %>%
+  gg_tsresiduals() +
+  labs(title = "Residuals plot for the ARIMA(2,0,2)(2,1,2)")
+  
+  
+```
+
+The ACF residuals for ARIMA(2,0,2)(2,1,2) has most lags within the significance level -- below the blue line. The histogram of residuals also look symmetric and the innovation residuals are centered around zero and there is almost no variance -- white noise.In contrast the ETS(M,A,M) model has a few lags that go beyond the significance level and residual histogram is not as symmetric as for the ARIMA model. The innovation residuals look white noise. Nevertheless we can see that seasonality in the ETS and ARIMA models have been removed. The seasonal lags in ACF plots for both these models are insignificant.
+
+On the ljung box test both these models have lower than 0.05 p-value, hence we focus more on the residuals auto correlations. As discussed above the residuals auto-correlation are small; the value for most lags range between -0.1 and 0.1 or slightly above this range. I could argue that although these models are not perfect and they perform better among other specified models. I can look at the accuracy measures on the test to assess whether or not the model performs well.
+
+#### Performance on the full data
+
+Lets have these models generate forecasts on full data set.
+
+```{r}
+fit_arima_ets <- myseries %>%
+  model(
+    arima = ARIMA(box_cox(Turnover, lambda = 0.056) ~ 1 + pdq(2,0,2) + PDQ(2,1,2)),
+    ets = ETS(Turnover ~ error("A") + trend("Ad") + season("M"))
+  )
+
+
+```
+
+```{r}
+fit_arima_ets %>%
+  select(arima) %>%
+  report()
+
+gg_tsresiduals(fit_arima_ets %>% select(arima), lag_max = 24) %>% labs(title = "residuals from arima")
+
+fit_arima_ets %>%
+  select(arima) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag = 24, dof = 9)%>%
+  kable(caption = "ljung box test for arima model")
+
+fit_arima_ets %>%
+  select(ets) %>%
+  report()
+
+gg_tsresiduals(fit_arima_ets %>% select(ets), lag_max = 16) %>% labs(title = "residuals from ets")
+
+fit_arima_ets %>%
+  select(ets) %>%
+  augment() %>%
+  features(.innov, ljung_box, lag = 24, dof = 11) %>%
+  kable(caption = "ljung box test for ets model") 
+
+
+```
+
+The innovation residuals from the arima model appear white noise, while the innovation residuals from the ets model tends to show variance.
+The ACF plot shows that for most part the lags for arima are within the significance level, while a few lags from the ets model ACF residuals plot tend to go beyond the significance level.
+
+```{r}
+fc_ets <-fit_arima_ets %>%
+  select(ets)%>%
+  forecast(h = "2 years") 
+
+fc_ets%>%
+  autoplot(myseries, level =80)
+
+
+fc_arima <- fit_arima_ets %>%
+  select(arima) %>%
+  forecast(h = "2 years") 
+
+fc_arima%>%
+  accuracy(Turnover, level = 80)
+  autoplot(cement) +
+  labs(
+    title = "Cement production in Australia",
+    y = "Tonnes ('000)"
+  )
+```
+
+
+
+
+

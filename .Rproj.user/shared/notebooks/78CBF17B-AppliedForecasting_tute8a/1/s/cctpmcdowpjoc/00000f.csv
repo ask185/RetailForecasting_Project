@@ -1,0 +1,10 @@
+"0","library(fpp3)"
+"0","library(tidyverse)"
+"0",""
+"0","amazon_stock <- gafa_stock %>%"
+"0","  filter(Symbol == ""AMZN"")"
+"0",""
+"0","amazon_stock %>%"
+"0"," autoplot()"
+"1","Plot variable not specified, automatically selected `.vars = Open`
+"

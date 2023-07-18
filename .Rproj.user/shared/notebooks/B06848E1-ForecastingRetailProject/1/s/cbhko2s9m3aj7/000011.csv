@@ -1,0 +1,10 @@
+"0","arima_auto_fit <- fitB %>%"
+"0","  select(arima_best)"
+"0",""
+"0","myseries_training %>%"
+"0","  autoplot(Turnover) +"
+"0","  autolayer(fitted(arima_auto_fit), colour = ""red"") +"
+"0","  labs(title = ""ARIMA: Fitted values against the actual values"", y =""millions $"")+"
+"0","  theme_minimal()"
+"1","Plot variable not specified, automatically selected `.vars = .fitted`
+"

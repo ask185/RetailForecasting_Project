@@ -1,0 +1,7 @@
+"0","accuracy(arima202212_forecasts, myseries) %>%"
+"0","   kbl(caption = ""Accuracy measures for ARIMA(2,0,2)(2,1,2)[12]"") %>%"
+"0","  kable_classic(full_width = F, html_font = ""Cambria"")"
+"2","Warning:"
+"2"," The future dataset is incomplete, incomplete out-of-sample data will be treated as missing. 
+24 observations are missing between 2019 Jan and 2020 Dec
+"

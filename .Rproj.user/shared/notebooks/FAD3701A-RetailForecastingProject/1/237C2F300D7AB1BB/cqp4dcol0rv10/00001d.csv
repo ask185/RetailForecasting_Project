@@ -1,0 +1,4 @@
+"0",""
+"0","arima202212 %>%"
+"0","  gg_tsresiduals() +"
+"0","  labs(title = ""Residuals plot for the ARIMA(2,0,2)(2,1,2)"")"
